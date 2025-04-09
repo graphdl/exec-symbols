@@ -185,31 +185,31 @@ describe('Lambda Calculus Primitives', () => {
     })
 
     it('SUCC should increment a Church numeral', () => {
-      expect(symbols.EQ(one)(symbols.SUCC(symbols.ZERO))('yes')('no')).toBe('yes')
+      expect(symbols.EQ(one)(symbols.SUCC(zero))('yes')('no')).toBe('yes')
       expect(symbols.EQ(two)(symbols.SUCC(one))('yes')('no')).toBe('yes')
       expect(symbols.EQ(three)(symbols.SUCC(two))('yes')('no')).toBe('yes')
       expect(symbols.EQ(eight)(symbols.SUCC(symbols.SUCC(symbols.SUCC(five))))('yes')('no')).toBe('yes')
     })
 
     it('ADD should add two Church numerals', () => {
-      expect(symbols.EQ(symbols.ADD(symbols.ZERO)(symbols.ZERO))(symbols.ZERO)('yes')('no')).toBe('yes')
-      expect(symbols.EQ(symbols.ADD(symbols.ZERO)(one))(one)('yes')('no')).toBe('yes')
+      expect(symbols.EQ(symbols.ADD(zero)(zero))(zero)('yes')('no')).toBe('yes')
+      expect(symbols.EQ(symbols.ADD(zero)(one))(one)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.ADD(one)(one))(two)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.ADD(two)(two))(four)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.ADD(two)(three))(five)('yes')('no')).toBe('yes')
     })
 
     it('MULT should multiply two Church numerals', () => {
-      expect(symbols.EQ(symbols.MULT(symbols.ZERO)(symbols.ZERO))(symbols.ZERO)('yes')('no')).toBe('yes')
-      expect(symbols.EQ(symbols.MULT(symbols.ZERO)(one))(symbols.ZERO)('yes')('no')).toBe('yes')
+      expect(symbols.EQ(symbols.MULT(zero)(zero))(zero)('yes')('no')).toBe('yes')
+      expect(symbols.EQ(symbols.MULT(zero)(one))(zero)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.MULT(one)(one))(one)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.MULT(two)(two))(four)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.MULT(two)(three))(six)('yes')('no')).toBe('yes')
     })
 
     it('EXP should raise one Church numeral to the power of another', () => {
-      expect(symbols.EQ(symbols.EXP(symbols.ZERO)(symbols.ZERO))(one)('yes')('no')).toBe('yes')
-      expect(symbols.EQ(symbols.EXP(symbols.ZERO)(one))(symbols.ZERO)('yes')('no')).toBe('yes')
+      expect(symbols.EQ(symbols.EXP(zero)(zero))(one)('yes')('no')).toBe('yes')
+      expect(symbols.EQ(symbols.EXP(zero)(one))(zero)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.EXP(one)(one))(one)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.EXP(two)(two))(four)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.EXP(two)(three))(eight)('yes')('no')).toBe('yes')
@@ -291,28 +291,28 @@ describe('Lambda Calculus Primitives', () => {
   })
 })
 
-describe('Entities', () => {
-  describe('Entity, unit, bind, get_id', () => {
-    it('should create and manipulate entities', () => {
-      const entity = symbols.Entity(42)
-      expect(symbols.get_id(entity)).toBe(42)
+describe('Nouns', () => {
+  describe('Noun, unit, bind, get_id', () => {
+    it('should create and manipulate nouns', () => {
+      const noun = symbols.Noun(42)
+      expect(symbols.get_id(noun)).toBe(42)
 
-      const unitEntity = symbols.unit(42)
-      expect(symbols.get_id(unitEntity)).toBe(42)
+      const unitNoun = symbols.unit(42)
+      expect(symbols.get_id(unitNoun)).toBe(42)
 
-      const boundEntity = symbols.bind(unitEntity)((id: number) => symbols.unit(id * 2))
-      expect(symbols.get_id(boundEntity)).toBe(84)
+      const boundNoun = symbols.bind(unitNoun)((id: number) => symbols.unit(id * 2))
+      expect(symbols.get_id(boundNoun)).toBe(84)
     })
   })
 
   describe('equals', () => {
-    it('should compare entities by ID', () => {
-      const entity1 = symbols.unit(1)
-      const entity2 = symbols.unit(1)
-      const entity3 = symbols.unit(2)
+    it('should compare nouns by ID', () => {
+      const noun1 = symbols.unit(1)
+      const noun2 = symbols.unit(1)
+      const noun3 = symbols.unit(2)
 
-      expect(symbols.equals(entity1)(entity2)('yes')('no')).toBe('yes')
-      expect(symbols.equals(entity1)(entity3)('yes')('no')).toBe('no')
+      expect(symbols.equals(noun1)(noun2)('yes')('no')).toBe('yes')
+      expect(symbols.equals(noun1)(noun3)('yes')('no')).toBe('no')
     })
   })
 
@@ -347,7 +347,7 @@ describe('Relationships and Facts', () => {
       // 4. Test makeVerbFact with this FactType
       const loves = symbols.makeVerbFact(factType)
 
-      // 5. Create entities
+      // 5. Create nouns
       const alice = symbols.unit('Alice')
       const bob = symbols.unit('Bob')
 
@@ -357,10 +357,10 @@ describe('Relationships and Facts', () => {
       // 7. Verify the fact
       expect(symbols.get_verb_symbol(aliceLovesBob)).toBe('loves')
 
-      // 8. Verify the entities in the fact
-      const entities = symbols.get_entities(aliceLovesBob)
-      expect(symbols.get_id(symbols.nth(zero)(entities))).toBe('Alice')
-      expect(symbols.get_id(symbols.nth(one)(entities))).toBe('Bob')
+      // 8. Verify the nouns in the fact
+      const nouns = symbols.get_nouns(aliceLovesBob)
+      expect(symbols.get_id(symbols.nth(zero)(nouns))).toBe('Alice')
+      expect(symbols.get_id(symbols.nth(one)(nouns))).toBe('Bob')
     })
   })
 
@@ -382,27 +382,27 @@ describe('Relationships and Facts', () => {
       // Verify the created fact
       expect(symbols.get_verb_symbol(fact)).toBe('loves')
 
-      // Verify entities
-      const entities = symbols.get_entities(fact)
-      expect(symbols.get_id(symbols.nth(zero)(entities))).toBe('Alice')
-      expect(symbols.get_id(symbols.nth(one)(entities))).toBe('Bob')
+      // Verify nouns
+      const nouns = symbols.get_nouns(fact)
+      expect(symbols.get_id(symbols.nth(zero)(nouns))).toBe('Alice')
+      expect(symbols.get_id(symbols.nth(one)(nouns))).toBe('Bob')
     })
   })
 
   describe('FactSymbol', () => {
-    it('should create a symbolic fact with verb and entities', () => {
+    it('should create a symbolic fact with verb and nouns', () => {
       const alice = symbols.unit('Alice')
       const bob = symbols.unit('Bob')
-      const entities = symbols.cons(alice)(symbols.cons(bob)(symbols.nil))
+      const nouns = symbols.cons(alice)(symbols.cons(bob)(symbols.nil))
 
-      const fact = symbols.FactSymbol('loves')(entities)
+      const fact = symbols.FactSymbol('loves')(nouns)
 
       expect(symbols.get_verb_symbol(fact)).toBe('loves')
-      expect(symbols.get_entities(fact)).toBe(entities)
+      expect(symbols.get_nouns(fact)).toBe(nouns)
 
-      // Verify we can access the entities correctly
-      expect(symbols.get_id(symbols.nth(zero)(symbols.get_entities(fact)))).toBe('Alice')
-      expect(symbols.get_id(symbols.nth(one)(symbols.get_entities(fact)))).toBe('Bob')
+      // Verify we can access the nouns correctly
+      expect(symbols.get_id(symbols.nth(zero)(symbols.get_nouns(fact)))).toBe('Alice')
+      expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe('Bob')
     })
   })
 })
@@ -425,9 +425,9 @@ describe('Events', () => {
   it('should create and access event properties', () => {
     const alice = symbols.unit('Alice')
     const bob = symbols.unit('Bob')
-    const entities = symbols.cons(alice)(symbols.cons(bob)(symbols.nil))
+    const nouns = symbols.cons(alice)(symbols.cons(bob)(symbols.nil))
 
-    const fact = symbols.FactSymbol('loves')(entities)
+    const fact = symbols.FactSymbol('loves')(nouns)
     const time = 'yesterday'
     const readings = symbols.cons('Alice loves Bob')(symbols.nil)
 
@@ -540,50 +540,48 @@ describe('Constraints and Violations', () => {
   })
 
   describe('Violations', () => {
-    it('should create a violation with constraint, entity, and reason', () => {
+    it('should create a violation with constraint, noun, and reason', () => {
       const constraint = symbols.Constraint(symbols.DEONTIC)((pop) => false)
-      const entity = symbols.unit('Alice')
+      const noun = symbols.unit('Alice')
       const reason = 'Violated rule'
 
-      const violation = symbols.Violation(constraint)(entity)(reason)
+      const violation = symbols.Violation(constraint)(noun)(reason)
 
       // We need to provide a selector to extract data
       expect(violation((c, e, r) => c)).toBe(constraint)
-      expect(violation((c, e, r) => e)).toBe(entity)
+      expect(violation((c, e, r) => e)).toBe(noun)
       expect(violation((c, e, r) => r)).toBe(reason)
     })
   })
 })
 
 describe('Meta-Fact Declarations', () => {
-  it('entityType should create an entity type fact', () => {
-    const fact = symbols.entityType('person')
-    expect(symbols.get_verb_symbol(fact)).toBe('entityType')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('person')
+  it('nounType should create a noun type', () => {
+    const fact = symbols.nounType('person')
+    expect(symbols.get_verb_symbol(fact)).toBe('nounType')
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('person')
   })
 
   it('factType should create a fact type declaration', () => {
     const fact = symbols.factType('loves', 2)
     expect(symbols.get_verb_symbol(fact)).toBe('factType')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('loves')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(fact)))).toBe(2)
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe(2)
   })
 
   it('role should create a role declaration', () => {
     const fact = symbols.role('loves', 0, 'lover')
     expect(symbols.get_verb_symbol(fact)).toBe('role')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('loves')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(fact)))).toBe(0)
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.SUCC(symbols.ZERO)))(symbols.get_entities(fact)))).toBe(
-      'lover',
-    )
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe(0)
+    expect(symbols.get_id(symbols.nth(two)(symbols.get_nouns(fact)))).toBe('lover')
   })
 
   it('reading should create a reading declaration', () => {
     const template = ['', ' loves ', '']
     const fact = symbols.reading('loves', template)
     expect(symbols.get_verb_symbol(fact)).toBe('reading')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
   })
 
   it('inverseReading should create an inverse reading declaration', () => {
@@ -591,30 +589,30 @@ describe('Meta-Fact Declarations', () => {
     const template = ['', ' is loved by ', '']
     const fact = symbols.inverseReading('loves', 'is_loved_by', order, template)
     expect(symbols.get_verb_symbol(fact)).toBe('inverseReading')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('loves')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(fact)))).toBe('is_loved_by')
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe('is_loved_by')
   })
 
   it('constraint should create a constraint declaration', () => {
     const fact = symbols.constraint('unique_lover', symbols.ALETHIC)
     expect(symbols.get_verb_symbol(fact)).toBe('constraint')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('unique_lover')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(fact)))).toBe(symbols.ALETHIC)
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('unique_lover')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe(symbols.ALETHIC)
   })
 
   it('constraintTarget should create a constraint target declaration', () => {
     const fact = symbols.constraintTarget('unique_lover', 'loves', 0)
     expect(symbols.get_verb_symbol(fact)).toBe('constraintTarget')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(fact)))).toBe('unique_lover')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(fact)))).toBe('loves')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.SUCC(symbols.ZERO)))(symbols.get_entities(fact)))).toBe(0)
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('unique_lover')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.nth(two)(symbols.get_nouns(fact)))).toBe(0)
   })
 
   it('violation should create a violation declaration', () => {
-    const entity = symbols.unit('Alice')
-    const fact = symbols.violation(entity, 'unique_lover', 'Already has a lover')
+    const noun = symbols.unit('Alice')
+    const fact = symbols.violation(noun, 'unique_lover', 'Already has a lover')
     expect(symbols.get_verb_symbol(fact)).toBe('violation')
-    expect(symbols.get_entities(fact)).toBeDefined()
+    expect(symbols.get_nouns(fact)).toBeDefined()
   })
 })
 
@@ -636,18 +634,18 @@ describe('Constants', () => {
 
 describe('Utility Functions', () => {
   describe('reorder', () => {
-    it('should reorder entities according to the order list', () => {
-      // Create a list of entities
+    it('should reorder nouns according to the order list', () => {
+      // Create a list of nouns
       const alice = symbols.unit('Alice')
       const bob = symbols.unit('Bob')
       const charlie = symbols.unit('Charlie')
-      const entities = symbols.cons(alice)(symbols.cons(bob)(symbols.cons(charlie)(symbols.nil)))
+      const nouns = symbols.cons(alice)(symbols.cons(bob)(symbols.cons(charlie)(symbols.nil)))
 
       // Create an order list to rearrange: [2, 0, 1] (charlie, alice, bob)
       const order = symbols.cons(two)(symbols.cons(zero)(symbols.cons(one)(symbols.nil)))
 
       // Apply reorder
-      const reordered = symbols.reorder(entities, order)
+      const reordered = symbols.reorder(nouns, order)
 
       // Check that the order is now [charlie, alice, bob]
       expect(symbols.get_id(symbols.nth(zero)(reordered))).toBe('Charlie')
@@ -664,7 +662,7 @@ describe('Reading Templates', () => {
 
     // Create a reading with a verb and order
     const verbSymbol = 'loves'
-    const order = symbols.cons(symbols.ZERO)(symbols.cons(symbols.SUCC(symbols.ZERO))(symbols.nil))
+    const order = symbols.cons(symbols.ZERO)(symbols.cons(one)(symbols.nil))
     const readingObj = symbols.Reading(verbSymbol, order, template)
 
     // Check the template was stored correctly
@@ -680,13 +678,7 @@ describe('Reading Templates', () => {
     // Create a reading with a verb and order (e.g., "sender sent message to recipient on date")
     const verbSymbol = 'sent'
     // Fix parentheses structure for order list - date, recipient, message, sender
-    const order = symbols.cons(symbols.ZERO)(
-      symbols.cons(symbols.SUCC(symbols.ZERO))(
-        symbols.cons(symbols.SUCC(symbols.SUCC(symbols.ZERO)))(
-          symbols.cons(symbols.SUCC(symbols.SUCC(symbols.SUCC(symbols.ZERO))))(symbols.nil),
-        ),
-      ),
-    )
+    const order = symbols.cons(symbols.ZERO)(symbols.cons(one)(symbols.cons(two)(symbols.cons(three)(symbols.nil))))
 
     const readingObj = symbols.Reading(verbSymbol, order, template)
 
@@ -701,26 +693,22 @@ describe('Inverse Reading Functionality', () => {
     const primary = 'loves'
     const inverse = 'is_loved_by'
     // Reverse the order from [0,1] to [1,0]
-    const order = symbols.cons(symbols.SUCC(symbols.ZERO))(symbols.cons(symbols.ZERO)(symbols.nil))
+    const order = symbols.cons(one)(symbols.cons(symbols.ZERO)(symbols.nil))
     const template = ['', ' is loved by ', '']
 
     const invReading = symbols.inverseReading(primary, inverse, order, template)
 
     // Check the inverse reading structure
     expect(symbols.get_verb_symbol(invReading)).toBe('inverseReading')
-    expect(symbols.get_id(symbols.nth(zero)(symbols.get_entities(invReading)))).toBe('loves')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(invReading)))).toBe(
-      'is_loved_by',
-    )
+    expect(symbols.get_id(symbols.nth(zero)(symbols.get_nouns(invReading)))).toBe('loves')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(invReading)))).toBe('is_loved_by')
 
     // The third element should be the order
-    const readingOrder = symbols.nth(symbols.SUCC(symbols.SUCC(symbols.ZERO)))(symbols.get_entities(invReading))
+    const readingOrder = symbols.nth(two)(symbols.get_nouns(invReading))
     expect(readingOrder).toBe(order)
 
     // The fourth element should be the template
-    const readingTemplate = symbols.nth(symbols.SUCC(symbols.SUCC(symbols.SUCC(symbols.ZERO))))(
-      symbols.get_entities(invReading),
-    )
+    const readingTemplate = symbols.nth(three)(symbols.get_nouns(invReading))
     expect(readingTemplate).toBe(template)
   })
 
@@ -729,14 +717,12 @@ describe('Inverse Reading Functionality', () => {
     const primary = 'enrolled_in'
     const inverse = 'has_enrolled'
     // Swap student and course: [0,1] -> [1,0]
-    const order = symbols.cons(symbols.SUCC(symbols.ZERO))(symbols.cons(symbols.ZERO)(symbols.nil))
+    const order = symbols.cons(one)(symbols.cons(symbols.ZERO)(symbols.nil))
     const template = ['', ' has ', ' enrolled']
 
     const invReading = symbols.inverseReading(primary, inverse, order, template)
 
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_entities(invReading)))).toBe('enrolled_in')
-    expect(symbols.get_id(symbols.nth(symbols.SUCC(symbols.ZERO))(symbols.get_entities(invReading)))).toBe(
-      'has_enrolled',
-    )
+    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(invReading)))).toBe('enrolled_in')
+    expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(invReading)))).toBe('has_enrolled')
   })
 })

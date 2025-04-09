@@ -52,13 +52,13 @@ const nth = (n) => (list) =>
         ),
       ),
   )(n)(list)(ZERO)
-const reorder = (entities, order) => map((i) => nth(i)(entities))(order)
+const reorder = (nouns, order) => map((i) => nth(i)(nouns))(order)
 
 // #endregion
-// #region Entities
+// #region Nouns
 
-const Entity = (id) => (s) => s(id)
-const unit = (id) => Entity(id)
+const Noun = (id) => (s) => s(id)
+const unit = (id) => Noun(id)
 const bind = (e) => (f) => e((id) => f(id))
 const get_id = (e) => e((id) => id)
 
@@ -90,9 +90,9 @@ const makeVerbFact = (FactType) =>
       n === 0 ? get_verb(FactType)(args) : (arg) => curry(append(args)(cons(arg)(nil)))(n - 1),
   )(nil)(get_arity(FactType))
 
-const FactSymbol = (verb) => (entities) => (s) => s(verb, entities)
+const FactSymbol = (verb) => (nouns) => (s) => s(verb, nouns)
 const get_verb_symbol = (f) => f((v, e) => v)
-const get_entities = (f) => f((v, e) => e)
+const get_nouns = (f) => f((v, e) => e)
 
 // #endregion
 // #region Events with Readings (look up inverses externally)
@@ -119,7 +119,7 @@ const StateMachine = (transition) => (initial) => (s) => s(transition, initial)
 const run_machine = (machine) => (stream) =>
   machine((transition, initial) => fold((event) => (state) => transition(state)(get_fact(event)))(initial)(stream))
 
-const run_entity = (machine) => (stream) => run_machine(machine)(stream)
+const run_noun = (machine) => (stream) => run_machine(machine)(stream)
 
 // #endregion
 // #region Constraints & Violations
@@ -136,12 +136,12 @@ const evaluate_constraint = (constraint) => (pop) => get_predicate(constraint)(p
 const evaluate_with_modality = (constraint) => (pop) =>
   pair(get_modality(constraint))(evaluate_constraint(constraint)(pop))
 
-const Violation = (constraint) => (entity) => (reason) => (s) => s(constraint, entity, reason)
+const Violation = (constraint) => (noun) => (reason) => (s) => s(constraint, noun, reason)
 
 // #endregion
 // #region Meta-Fact Declarations
 
-const entityType = (name) => FactSymbol('entityType')(cons(unit(name))(nil))
+const nounType = (name) => FactSymbol('nounType')(cons(unit(name))(nil))
 
 const factType = (verb, arity) => FactSymbol('factType')(cons(unit(verb))(cons(unit(arity))(nil)))
 
@@ -157,8 +157,8 @@ const constraint = (id, modality) => FactSymbol('constraint')(cons(unit(id))(con
 const constraintTarget = (constraintId, verb, roleIndex) =>
   FactSymbol('constraintTarget')(cons(unit(constraintId))(cons(unit(verb))(cons(unit(roleIndex))(nil))))
 
-const violation = (entity, constraintId, reason) =>
-  FactSymbol('violation')(cons(unit(entity))(cons(unit(constraintId))(cons(unit(reason))(nil))))
+const violation = (noun, constraintId, reason) =>
+  FactSymbol('violation')(cons(unit(noun))(cons(unit(constraintId))(cons(unit(reason))(nil))))
 
 // #endregion
 // #region Reserved Symbols
@@ -170,7 +170,7 @@ const RMAP = Symbol('RMAP')
 
 export {
   /**
-   * The identity function.
+   * The idnoun function.
    * @param n - The value to return.
    * @returns The value.
    */
@@ -251,7 +251,7 @@ export {
   append,
   /**
    * The zero function.
-   * Returns the identity function as a constant. (equivalent to FALSE)
+   * Returns the idnoun function as a constant. (equivalent to FALSE)
    * @param a - The function to apply to the pair.
    * @returns The value.
    */
@@ -327,7 +327,7 @@ export {
    * @returns The value.
    */
   GE,
-  Entity,
+  Noun,
   unit,
   bind,
   get_id,
@@ -355,7 +355,7 @@ export {
   makeVerbFact,
   FactSymbol,
   get_verb_symbol,
-  get_entities,
+  get_nouns,
   Reading,
   get_reading_verb,
   get_reading_order,
@@ -370,14 +370,14 @@ export {
   unguarded,
   StateMachine,
   run_machine,
-  run_entity,
+  run_noun,
   Constraint,
   get_modality,
   get_predicate,
   evaluate_constraint,
   evaluate_with_modality,
   Violation,
-  entityType,
+  nounType,
   factType,
   role,
   reading,
