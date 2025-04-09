@@ -168,7 +168,7 @@ const RMAP = Symbol('RMAP')
 
 export {
   /**
-   * The idnoun function.
+   * The identity function.
    * @param n - The value to return.
    * @returns The value.
    */
@@ -249,7 +249,7 @@ export {
   append,
   /**
    * The zero function.
-   * Returns the idnoun function as a constant. (equivalent to FALSE)
+   * Returns the identity function as a constant. (equivalent to FALSE)
    * @param a - The function to apply to the pair.
    * @returns The value.
    */

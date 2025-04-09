@@ -2,9 +2,9 @@
 
 [![Tests](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml/badge.svg)](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml)
 
-A **purely functional DSL** for modeling facts, entities, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
+A **purely functional DSL** for modeling facts, nouns, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
 
-This library showcases how to represent *boolean logic, pairs, lists, entities, relationships, constraints, events, and more* all as functional closures. It may be useful for educational purposes, rule engines, or domain-specific language experiments.
+This library showcases how to represent *boolean logic, pairs, lists, nouns, relationships, constraints, events, and more* all as functional closures. It may be useful for educational purposes, rule engines, or domain-specific language experiments.
 
 ---
 
@@ -17,7 +17,7 @@ This library showcases how to represent *boolean logic, pairs, lists, entities, 
   - [Church Booleans](#church-booleans)
   - [Church Numerals](#church-numerals)
   - [Church Lists and Pairs](#church-lists-and-pairs)
-  - [Entities and Binding](#entities-and-binding)
+  - [Nouns and Binding](#nouns-and-binding)
   - [Relationships and Facts](#relationships-and-facts)
   - [Readings](#readings)
   - [Events](#events)
@@ -34,10 +34,10 @@ This library showcases how to represent *boolean logic, pairs, lists, entities, 
 - **Church Booleans** (`TRUE`, `FALSE`, `AND`, `OR`, `NOT`) and combinators (`IF`)
 - **Church Numerals** (`ZERO`, `SUCC`, `ADD`, `MULT`, `EXP`, `EQ`, `LT`, `GT`, `LE`, `GE`)
 - **Church-encoded Pairs and Lists** (`pair`, `fst`, `snd`, `nil`, `ISEMPTY`, `cons`, `fold`, `map`, `append`)
-- **Entities** with a monadic interface (`Entity`, `unit`, `bind`, `get_id`)
+- **Nouns** with a monadic interface (`Noun`, `unit`, `bind`, `get_id`)
 - **Relationship Types** (`FactType`) supporting arity, verb function, reading, and constraints
 - **Curried Verb Facts** to dynamically build relationships by supplying arguments (`makeVerbFact`)
-- **Symbolic Facts** (`FactSymbol`) and accessors (`get_verb_symbol`, `get_entities`)
+- **Symbolic Facts** (`FactSymbol`) and accessors (`get_verb_symbol`, `get_nouns`)
 - **Readings** (`Reading`) with templates, verb accessors, and inverse readings
 - **Events** for time-based fact processing
 - **State Machines** with transitions, guard functions, and event-driven updates
@@ -63,19 +63,19 @@ const {
   ZERO, SUCC, ADD, MULT, EXP, EQ, LT, GT, LE, GE,
   pair, fst, snd,
   nil, ISEMPTY, cons, map, fold, append,
-  Entity, unit, bind, get_id,
+  Noun, unit, bind, get_id,
   equals, nth, reorder,
   FactType, get_arity, get_verb, get_reading, get_constraints,
-  makeVerbFact, FactSymbol, get_verb_symbol, get_entities,
+  makeVerbFact, FactSymbol, get_verb_symbol, get_nouns,
   Reading, get_reading_verb, get_reading_order, get_reading_template,
   Event, get_fact, get_time, get_event_readings,
   unit_state, bind_state,
   make_transition, unguarded,
-  StateMachine, run_machine, run_entity,
+  StateMachine, run_machine, run_noun,
   Constraint, get_modality, get_predicate,
   evaluate_constraint, evaluate_with_modality,
   Violation,
-  entityType, factType, role, reading, inverseReading,
+  nounType, factType, role, reading, inverseReading,
   constraint, constraintTarget, violation,
   ALETHIC, DEONTIC,
   RMAP, CSDP
@@ -86,8 +86,8 @@ const {
 
 ## Quick Start
 
-1. Create a FactType (relationship type) with a specified arity (the number of entity arguments).
-2. Use `makeVerbFact` to build a curried function that expects that many entities.
+1. Create a FactType (relationship type) with a specified arity (the number of noun arguments).
+2. Use `makeVerbFact` to build a curried function that expects that many nouns.
 3. Represent facts using `FactSymbol` (if you just need a symbolic representation).
 4. Model constraints as needed, and evaluate them against a collection of facts (the "population").
 5. Use `Event` and `StateMachine` to process a stream of events that update your system state.
@@ -151,18 +151,18 @@ const append = l1 => l2 => ...
 - A *list* is stored as a function that takes a function for the "cons" case (`c`) and a function for the "nil" case (`n`).
 - `ISEMPTY` checks if a list is empty.
 
-### Entities and Binding
+### Nouns and Binding
 
 ```js
-const Entity = id => s => s(id)
-const unit   = id => Entity(id)
+const Noun = id => s => s(id)
+const unit   = id => Noun(id)
 const bind   = e => f => e(id => f(id))
 const get_id = e => e(id => id)
 ```
 
-- An `Entity` is also a function (the same Church-style approach).
-- `unit` creates an entity from an identifier.
-- `bind` gives a way to compose entity transformations (similar to a monad).
+- An `Noun` is also a function (the same Church-style approach).
+- `unit` creates an noun from an identifier.
+- `bind` gives a way to compose noun transformations (similar to a monad).
 
 ### Relationships and Facts
 
@@ -174,7 +174,7 @@ const FactType = arity => verbFn => reading => constraints =>
 ```
 
 - A `FactType` captures:
-  1. Arity (number of entities in the relationship),
+  1. Arity (number of nouns in the relationship),
   2. A verb function,
   3. A reading (a textual representation or something similar),
   4. Constraints (additional rules).
@@ -195,15 +195,15 @@ const makeVerbFact = FactType => {
 }
 ```
 
-- Takes a `FactType` and returns a curried function that expects exactly `arity` number of entities. Once all entities are provided, it executes the underlying verb function.
+- Takes a `FactType` and returns a curried function that expects exactly `arity` number of nouns. Once all nouns are provided, it executes the underlying verb function.
 
 #### Symbolic Facts
 
 ```js
-const FactSymbol = verb => entities => s => s(verb)(entities)
+const FactSymbol = verb => nouns => s => s(verb)(nouns)
 ```
 
-- A quick way to represent a fact as `(verb, [entities])` in a Church-encoded closure.
+- A quick way to represent a fact as `(verb, [nouns])` in a Church-encoded closure.
 
 ### Readings
 
@@ -216,8 +216,8 @@ const get_reading_template = (r) => r((v, o, t) => t)
 
 - A `Reading` represents how to textually represent a fact
 - `verb` is the verb symbol
-- `order` is the order of entities in the reading
-- `template` is an array of strings that are concatenated with entity IDs
+- `order` is the order of nouns in the reading
+- `template` is an array of strings that are concatenated with noun IDs
 
 ### Events
 
@@ -269,14 +269,14 @@ const run_machine = machine => stream =>
 
 ```js
 const Constraint = modality => predicate => s => s(modality)(predicate)
-const Violation  = constraint => entity => reason => s => s(constraint)(entity)(reason)
+const Violation  = constraint => noun => reason => s => s(constraint)(noun)(reason)
 ```
 
 - Constraints contain:
   - Modality (e.g., `ALETHIC` or `DEONTIC`).
   - A predicate function to evaluate over a "population."
 
-- A `Violation` is a record of which entity violated which constraint, and why.
+- A `Violation` is a record of which noun violated which constraint, and why.
 
 ## Examples
 
@@ -305,7 +305,7 @@ const lovesFactType = FactType(2)(
 // Make a verb fact for "loves"
 const loves = makeVerbFact(lovesFactType)
 
-// Provide two entities
+// Provide two nouns
 const alice = unit("Alice")
 const bob   = unit("Bob")
 
@@ -314,8 +314,8 @@ const fact = loves(alice)(bob) // => FactSymbol('loves')(cons(alice)(cons(bob)(n
 
 // Inspect
 console.log(get_verb_symbol(fact))     // 'loves'
-console.log(get_id(nth(0)(get_entities(fact)))) // 'Alice'
-console.log(get_id(nth(1)(get_entities(fact)))) // 'Bob'
+console.log(get_id(nth(0)(get_nouns(fact)))) // 'Alice'
+console.log(get_id(nth(1)(get_nouns(fact)))) // 'Bob'
 ```
 
 ### Basic State Machine Example
@@ -374,7 +374,7 @@ Demonstrates:
 - Minimal fact population with post/reply/moderation
 
 ```js
-// ───────────── Entities ─────────────
+// ───────────── Nouns ─────────────
 const alice   = unit("alice")
 const bob     = unit("bob")
 const thread1 = unit("thread-1")
@@ -427,7 +427,7 @@ const inverseRequiredForPosts = Constraint(DEONTIC)(
   pop => {
     const found = any(pop, f =>
       get_verb_symbol(f) === "inverseReading" &&
-      get_id(nth(0)(get_entities(f))) === "posts"
+      get_id(nth(0)(get_nouns(f))) === "posts"
     )
     return found ? TRUE : FALSE
   }
