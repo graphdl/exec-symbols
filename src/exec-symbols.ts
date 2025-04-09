@@ -84,13 +84,11 @@ const get_constraints = (rt) => rt((a, v, r, c) => c)
 // #endregion
 // #region Executable Facts
 
-const makeVerbFact = (FactType) => {
-  // When arity is 0, just return the verb with empty list
-  // Otherwise, return a curried function to collect all arguments
-  const curry = (args, n) => (n === 0 ? get_verb(FactType)(args) : (arg) => curry(append(args)(cons(arg)(nil)), n - 1))
-
-  return curry(nil, get_arity(FactType))
-}
+const makeVerbFact = (FactType) =>
+  Θ(
+    (curry) => (args) => (n) =>
+      n === 0 ? get_verb(FactType)(args) : (arg) => curry(append(args)(cons(arg)(nil)))(n - 1),
+  )(nil)(get_arity(FactType))
 
 const FactSymbol = (verb) => (entities) => (s) => s(verb, entities)
 const get_verb_symbol = (f) => f((v, e) => v)
@@ -109,12 +107,7 @@ const get_event_readings = (e) => e((f, t, r) => r)
 
 const unit_state = (a) => (s) => pair(a)(s)
 
-const bind_state = (m) => (f) => (s) => {
-  const result = m(s)
-  const a = fst(result)
-  const s_ = snd(result)
-  return f(a)(s_)
-}
+const bind_state = (m) => (f) => (s) => ((result) => f(fst(result))(snd(result)))(m(s))
 
 const make_transition = (guard) => (compute_next) => (state) => (input) =>
   IF(guard(state)(input))(compute_next(state)(input))(state)
@@ -140,11 +133,8 @@ const get_predicate = (c) => c((_, p) => p)
 
 const evaluate_constraint = (constraint) => (pop) => get_predicate(constraint)(pop)
 
-const evaluate_with_modality = (constraint) => (pop) => {
-  const result = evaluate_constraint(constraint)(pop)
-  const modal = get_modality(constraint)
-  return pair(modal)(result)
-}
+const evaluate_with_modality = (constraint) => (pop) =>
+  pair(get_modality(constraint))(evaluate_constraint(constraint)(pop))
 
 const Violation = (constraint) => (entity) => (reason) => (s) => s(constraint, entity, reason)
 
