@@ -13,9 +13,11 @@ This library showcases how to represent *boolean logic, pairs, lists, entities, 
 - [Quick Start](#quick-start)
 - [Core Concepts](#core-concepts)
   - [Church Booleans](#church-booleans)
+  - [Church Numerals](#church-numerals)
   - [Church Lists and Pairs](#church-lists-and-pairs)
   - [Entities and Binding](#entities-and-binding)
   - [Relationships and Facts](#relationships-and-facts)
+  - [Readings](#readings)
   - [Events](#events)
   - [State Machines](#state-machines)
   - [Constraints and Violations](#constraints-and-violations)
@@ -28,11 +30,13 @@ This library showcases how to represent *boolean logic, pairs, lists, entities, 
 ## Features
 
 - **Church Booleans** (`TRUE`, `FALSE`, `AND`, `OR`, `NOT`) and combinators (`IF`)
-- **Church-encoded Pairs and Lists** (`pair`, `fst`, `snd`, `nil`, `cons`, `fold`, `map`, `append`)
+- **Church Numerals** (`ZERO`, `SUCC`, `ADD`, `MULT`, `EXP`, `EQ`, `LT`, `GT`, `LE`, `GE`)
+- **Church-encoded Pairs and Lists** (`pair`, `fst`, `snd`, `nil`, `ISEMPTY`, `cons`, `fold`, `map`, `append`)
 - **Entities** with a monadic interface (`Entity`, `unit`, `bind`, `get_id`)
 - **Relationship Types** (`FactType`) supporting arity, verb function, reading, and constraints
 - **Curried Verb Facts** to dynamically build relationships by supplying arguments (`makeVerbFact`)
 - **Symbolic Facts** (`FactSymbol`) and accessors (`get_verb_symbol`, `get_entities`)
+- **Readings** (`Reading`) with templates, verb accessors, and inverse readings
 - **Events** for time-based fact processing
 - **State Machines** with transitions, guard functions, and event-driven updates
 - **Constraints** (alethic vs. deontic), with predicates that evaluate over a "population"
@@ -53,22 +57,23 @@ Then, in your code:
 
 ```js
 const {
-  TRUE, FALSE, IF, AND, OR, NOT,
+  IDENTITY, TRUE, FALSE, IF, AND, OR, NOT,
+  ZERO, SUCC, ADD, MULT, EXP, EQ, LT, GT, LE, GE,
   pair, fst, snd,
-  nil, cons, map, fold, append,
+  nil, ISEMPTY, cons, map, fold, append,
   Entity, unit, bind, get_id,
-  equals, nth,
+  equals, nth, reorder,
   FactType, get_arity, get_verb, get_reading, get_constraints,
   makeVerbFact, FactSymbol, get_verb_symbol, get_entities,
-  Event, get_fact, get_time,
+  Reading, get_reading_verb, get_reading_order, get_reading_template,
+  Event, get_fact, get_time, get_event_readings,
   unit_state, bind_state,
   make_transition, unguarded,
   StateMachine, run_machine, run_entity,
   Constraint, get_modality, get_predicate,
   evaluate_constraint, evaluate_with_modality,
   Violation,
-  mandatory_role_constraint,
-  entityType, factType, role, reading,
+  entityType, factType, role, reading, inverseReading,
   constraint, constraintTarget, violation,
   ALETHIC, DEONTIC,
   RMAP, CSDP
@@ -104,6 +109,25 @@ const NOT   = p => p(FALSE)(TRUE)
 
 - These are *Church-encoded* booleans. They are functions that, given two branches, choose one to evaluate.
 
+### Church Numerals
+
+```js
+const ZERO = (a) => (b) => b
+const SUCC = (n) => (a) => (b) => a(n(a)(b))
+const ADD = (m) => (n) => (a) => (b) => m(SUCC)(n)(a)(b)
+const MULT = (m) => (n) => (a) => (b) => m(n(a))(b)
+const EXP = (m) => (n) => (a) => (b) => n(m)(a)(b)
+const EQ = (m) => (n) => AND(LE(m)(n))(LE(n)(m))
+const LT = (m) => (n) => NOT(GE(m)(n))
+const GT = (m) => (n) => NOT(LE(m)(n))
+const LE = (m) => (n) => ISZERO(SUB(m)(n))
+const GE = (m) => (n) => ISZERO(SUB(n)(m))
+```
+
+- Church numerals represent natural numbers as functions
+- A Church numeral `n` applies a function `f` exactly `n` times to a value
+- The library includes arithmetic operations (`ADD`, `MULT`, `EXP`) and comparisons (`EQ`, `LT`, `GT`, `LE`, `GE`)
+
 ### Church Lists and Pairs
 
 ```js
@@ -114,6 +138,7 @@ const snd  = p => p((_, b) => b)
 
 // Lists
 const nil  = c => n => n
+const ISEMPTY = (L) => L((head) => (tail) => FALSE)
 const cons = h => t => c => n => c(h)(t(c)(n))
 const fold = f => acc => l => l(f)(acc)
 const map  = f => l => ...
@@ -122,13 +147,16 @@ const append = l1 => l2 => ...
 
 - A *pair* is stored as a function that takes a function `f` and applies `f(a)(b)`.
 - A *list* is stored as a function that takes a function for the "cons" case (`c`) and a function for the "nil" case (`n`).
+- `ISEMPTY` checks if a list is empty.
 
 ### Entities and Binding
 
+```js
 const Entity = id => s => s(id)
 const unit   = id => Entity(id)
 const bind   = e => f => e(id => f(id))
 const get_id = e => e(id => id)
+```
 
 - An `Entity` is also a function (the same Church-style approach).
 - `unit` creates an entity from an identifier.
@@ -175,15 +203,30 @@ const FactSymbol = verb => entities => s => s(verb)(entities)
 
 - A quick way to represent a fact as `(verb, [entities])` in a Church-encoded closure.
 
+### Readings
+
+```js
+const Reading = (verb, order, template) => (s) => s(verb, order, template)
+const get_reading_verb = (r) => r((v, o, t) => v)
+const get_reading_order = (r) => r((v, o, t) => o)
+const get_reading_template = (r) => r((v, o, t) => t)
+```
+
+- A `Reading` represents how to textually represent a fact
+- `verb` is the verb symbol
+- `order` is the order of entities in the reading
+- `template` is an array of strings that are concatenated with entity IDs
+
 ### Events
 
 ```js
-const Event = fact => time => s => s(fact)(time)
-const get_fact = e => e((f, t) => f)
-const get_time = e => e((f, t) => t)
+const Event = fact => time => readings => s => s(fact, time, readings)
+const get_fact = e => e((f, t, r) => f)
+const get_time = e => e((f, t, r) => t)
+const get_event_readings = e => e((f, t, r) => r)
 ```
 
-- An `Event` pairs a fact with a time, again using a function-based approach.
+- An `Event` pairs a fact with a time and optional readings, again using a function-based approach.
 
 ### State Machines
 
@@ -200,6 +243,9 @@ const make_transition = guard => compute_next =>
     )(
       state
     )
+
+// Unguarded transition
+const unguarded = make_transition((_s) => (_i) => TRUE)
 
 // StateMachine
 const StateMachine = transition => initial => s => s(transition)(initial)
@@ -230,19 +276,6 @@ const Violation  = constraint => entity => reason => s => s(constraint)(entity)(
 
 - A `Violation` is a record of which entity violated which constraint, and why.
 
-Example `mandatory_role_constraint`:
-
-```js
-const mandatory_role_constraint = (roleIndex, FactType) => pop => {
-  // Ensures that every entity designated for that role
-  // actually appears in a fact with the matching verb
-}
-```
-
-- Verifies that all entities that occupy a certain "role" in a relationship appear in the "population" of facts.
-
----
-
 ## Examples
 
 ### Simple Boolean Usage
@@ -262,9 +295,9 @@ const lovesFactType = FactType(2)(
     return FactSymbol('loves')(args)
   }
 )(
-  "X loves Y"        // reading
+  ['', ' loves ', ''] // reading
 )(
-  nil                // no additional constraints
+  nil                 // no additional constraints
 )
 
 // Make a verb fact for "loves"
@@ -302,12 +335,29 @@ const transition = make_transition(guard)(compute_next)
 const myMachine = StateMachine(transition)(pair(unit("idle"))(nil))
 
 // Stream of events
-const eventStream = cons(Event(unit("go"))(0))(
-                    cons(Event(unit("stop"))(1))(nil))
+const eventStream = cons(Event(unit("go"))(0)(nil))(
+                    cons(Event(unit("stop"))(1)(nil))(nil))
 
 // Run
 const finalState = run_machine(myMachine)(eventStream)
 console.log(get_id(fst(finalState))) // "running" if it processed "go"
+```
+
+### Using Readings
+
+```js
+// Define a reading
+const lovesReading = Reading('loves', 
+                           cons(ZERO)(cons(SUCC(ZERO))(nil)), 
+                           ['', ' loves ', ''])
+
+// Create an inverse reading (B is loved by A instead of A loves B)
+const lovedByReading = inverseReading('loves', 'is_loved_by',
+                              cons(SUCC(ZERO))(cons(ZERO)(nil)),
+                              ['', ' is loved by ', ''])
+
+// Use in event with readings
+const event = Event(loves(alice)(bob))('now')(cons(lovesReading)(cons(lovedByReading)(nil)))
 ```
 
 ### Lightweight Symbolic Forum Model Example
