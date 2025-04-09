@@ -119,8 +119,6 @@ const StateMachine = (transition) => (initial) => (s) => s(transition, initial)
 const run_machine = (machine) => (stream) =>
   machine((transition, initial) => fold((event) => (state) => transition(state)(get_fact(event)))(initial)(stream))
 
-const run_noun = (machine) => (stream) => run_machine(machine)(stream)
-
 // #endregion
 // #region Constraints & Violations
 
@@ -370,7 +368,6 @@ export {
   unguarded,
   StateMachine,
   run_machine,
-  run_noun,
   Constraint,
   get_modality,
   get_predicate,
