@@ -1,5 +1,7 @@
 # exec-symbols
 
+![Tests](https://github.com/drivly/exec-symbols/actions/workflows/tests.yml/badge.svg)
+
 A **purely functional DSL** for modeling facts, entities, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
 
 This library showcases how to represent *boolean logic, pairs, lists, entities, relationships, constraints, events, and more* all as functional closures. It may be useful for educational purposes, rule engines, or domain-specific language experiments.
