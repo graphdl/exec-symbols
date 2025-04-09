@@ -1,6 +1,6 @@
 # exec-symbols
 
-![Tests](https://github.com/drivly/exec-symbols/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml/badge.svg)](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml)
 
 A **purely functional DSL** for modeling facts, entities, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
 
