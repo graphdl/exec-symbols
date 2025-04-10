@@ -8,8 +8,7 @@ const three = symbols.SUCC(two)
 const four = symbols.SUCC(three)
 const five = symbols.SUCC(four)
 const six = symbols.SUCC(five)
-const seven = symbols.SUCC(six)
-const eight = symbols.SUCC(seven)
+const eight = symbols.SUCC(symbols.SUCC(six))
 const nine = symbols.SUCC(eight)
 
 describe('Lambda Calculus Primitives', () => {
@@ -114,9 +113,8 @@ describe('Lambda Calculus Primitives', () => {
       // Create a list with one element
       const oneElementList = symbols.cons(zero)(emptyList)
 
-      // Create a list with multiple elements
-      // Each cons adds an element to the front of the list
-      const multiElementList = symbols.cons(zero)(symbols.cons(one)(symbols.cons(two)(symbols.nil)))
+      // Create a list with multiple elements using list instead of cons
+      const multiElementList = symbols.list(zero, one, two)
 
       // Verify one element list
       expect(symbols.fst(oneElementList)).toEqual(zero)
@@ -140,13 +138,13 @@ describe('Lambda Calculus Primitives', () => {
     })
 
     it('fold should apply a function to each element of a list', () => {
-      const list = symbols.cons(zero)(symbols.cons(one)(symbols.cons(two)(symbols.nil)))
+      const list = symbols.list(zero, one, two)
       const sum = symbols.fold(symbols.ADD)(zero)(list)
       expect(symbols.EQ(sum)(three)('yes')('no')).toBe('yes')
     })
 
     it('map should transform each element of a list', () => {
-      const list = symbols.cons(zero)(symbols.cons(one)(symbols.cons(two)(symbols.nil)))
+      const list = symbols.list(zero, one, two)
 
       // Test a simpler transformation: increment by one
       const incremented = symbols.map((x) => symbols.SUCC(x))(list)
@@ -158,8 +156,8 @@ describe('Lambda Calculus Primitives', () => {
     })
 
     it('append should join two lists', () => {
-      const list1 = symbols.cons(zero)(symbols.cons(one)(symbols.nil))
-      const list2 = symbols.cons(two)(symbols.cons(three)(symbols.nil))
+      const list1 = symbols.list(zero, one)
+      const list2 = symbols.list(two, three)
       const joined = symbols.append(list1)(list2)
       expect(symbols.fst(joined)).toEqual(zero)
       expect(symbols.fst(symbols.snd(joined))).toEqual(one)
@@ -182,6 +180,30 @@ describe('Lambda Calculus Primitives', () => {
 
       // We can also test that it equals a function that returns the identity function
       expect(symbols.EQ(symbols.ZERO)((a) => symbols.IDENTITY)('yes')('no')).toBe('yes')
+    })
+
+    it('UINT should convert JavaScript numbers to Church numerals', () => {
+      // Test with negative number - should return ZERO
+      const negativeResult = symbols.UINT(-5)
+      expect(symbols.EQ(negativeResult)(symbols.ZERO)('yes')('no')).toBe('yes')
+
+      // Test with zero - should return ZERO
+      const zeroResult = symbols.UINT(0)
+      expect(symbols.EQ(zeroResult)(symbols.ZERO)('yes')('no')).toBe('yes')
+
+      // Test with positive numbers - should return the correct Church numeral
+      const oneResult = symbols.UINT(1)
+      expect(symbols.EQ(oneResult)(one)('yes')('no')).toBe('yes')
+
+      const threeResult = symbols.UINT(4)
+      expect(symbols.EQ(threeResult)(four)('yes')('no')).toBe('yes')
+
+      const fiveResult = symbols.UINT(5)
+      expect(symbols.EQ(fiveResult)(five)('yes')('no')).toBe('yes')
+
+      // Test with larger number
+      const nineResult = symbols.UINT(9)
+      expect(symbols.EQ(nineResult)(nine)('yes')('no')).toBe('yes')
     })
 
     it('SUCC should increment a Church numeral', () => {
@@ -318,7 +340,7 @@ describe('Nouns', () => {
 
   describe('Utility functions', () => {
     it('nth should return the nth element of a list', () => {
-      const list = symbols.cons(zero)(symbols.cons(one)(symbols.cons(two)(symbols.nil)))
+      const list = symbols.list(zero, one, two)
       expect(symbols.EQ(symbols.nth(zero)(list))(zero)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.nth(one)(list))(one)('yes')('no')).toBe('yes')
       expect(symbols.EQ(symbols.nth(two)(list))(two)('yes')('no')).toBe('yes')
@@ -393,7 +415,7 @@ describe('Relationships and Facts', () => {
     it('should create a symbolic fact with verb and nouns', () => {
       const alice = symbols.unit('Alice')
       const bob = symbols.unit('Bob')
-      const nouns = symbols.cons(alice)(symbols.cons(bob)(symbols.nil))
+      const nouns = symbols.list(alice, bob)
 
       const fact = symbols.FactSymbol('loves')(nouns)
 
@@ -410,7 +432,7 @@ describe('Relationships and Facts', () => {
 describe('Readings', () => {
   it('should create and access reading properties', () => {
     const verb = symbols.FactSymbol('loves')
-    const order = symbols.cons(zero)(symbols.cons(one)(symbols.nil))
+    const order = symbols.list(zero, one)
     const template = ['', ' loves ', '']
 
     const reading = symbols.Reading(verb, order, template)
@@ -425,11 +447,11 @@ describe('Events', () => {
   it('should create and access event properties', () => {
     const alice = symbols.unit('Alice')
     const bob = symbols.unit('Bob')
-    const nouns = symbols.cons(alice)(symbols.cons(bob)(symbols.nil))
+    const nouns = symbols.list(alice, bob)
 
     const fact = symbols.FactSymbol('loves')(nouns)
     const time = 'yesterday'
-    const readings = symbols.cons('Alice loves Bob')(symbols.nil)
+    const readings = symbols.list('Alice loves Bob')
 
     const event = symbols.Event(fact)(time)(readings)
 
@@ -495,7 +517,7 @@ describe('State Machines', () => {
       const decEvent = symbols.Event(symbols.FactSymbol('dec')(symbols.nil))('t3')(symbols.nil)
 
       // Create event stream
-      const eventStream = symbols.cons(incEvent1)(symbols.cons(incEvent2)(symbols.cons(decEvent)(symbols.nil)))
+      const eventStream = symbols.list(incEvent1, incEvent2, decEvent)
 
       // Run machine
       const finalState = symbols.run_machine(counterMachine)(eventStream)
@@ -585,7 +607,7 @@ describe('Meta-Fact Declarations', () => {
   })
 
   it('inverseReading should create an inverse reading declaration', () => {
-    const order = symbols.cons(1)(symbols.cons(0)(symbols.nil))
+    const order = symbols.list(1, 0)
     const template = ['', ' is loved by ', '']
     const fact = symbols.inverseReading('loves', 'is_loved_by', order, template)
     expect(symbols.get_verb_symbol(fact)).toBe('inverseReading')
@@ -639,10 +661,10 @@ describe('Utility Functions', () => {
       const alice = symbols.unit('Alice')
       const bob = symbols.unit('Bob')
       const charlie = symbols.unit('Charlie')
-      const nouns = symbols.cons(alice)(symbols.cons(bob)(symbols.cons(charlie)(symbols.nil)))
+      const nouns = symbols.list(alice, bob, charlie)
 
       // Create an order list to rearrange: [2, 0, 1] (charlie, alice, bob)
-      const order = symbols.cons(two)(symbols.cons(zero)(symbols.cons(one)(symbols.nil)))
+      const order = symbols.list(two, zero, one)
 
       // Apply reorder
       const reordered = symbols.reorder(nouns, order)
@@ -662,7 +684,7 @@ describe('Reading Templates', () => {
 
     // Create a reading with a verb and order
     const verbSymbol = 'loves'
-    const order = symbols.cons(symbols.ZERO)(symbols.cons(one)(symbols.nil))
+    const order = symbols.list(zero, one)
     const readingObj = symbols.Reading(verbSymbol, order, template)
 
     // Check the template was stored correctly
@@ -677,8 +699,7 @@ describe('Reading Templates', () => {
 
     // Create a reading with a verb and order (e.g., "sender sent message to recipient on date")
     const verbSymbol = 'sent'
-    // Fix parentheses structure for order list - date, recipient, message, sender
-    const order = symbols.cons(symbols.ZERO)(symbols.cons(one)(symbols.cons(two)(symbols.cons(three)(symbols.nil))))
+    const order = symbols.list(zero, one, two, three)
 
     const readingObj = symbols.Reading(verbSymbol, order, template)
 
@@ -693,7 +714,7 @@ describe('Inverse Reading Functionality', () => {
     const primary = 'loves'
     const inverse = 'is_loved_by'
     // Reverse the order from [0,1] to [1,0]
-    const order = symbols.cons(one)(symbols.cons(symbols.ZERO)(symbols.nil))
+    const order = symbols.list(one, zero)
     const template = ['', ' is loved by ', '']
 
     const invReading = symbols.inverseReading(primary, inverse, order, template)
@@ -717,7 +738,7 @@ describe('Inverse Reading Functionality', () => {
     const primary = 'enrolled_in'
     const inverse = 'has_enrolled'
     // Swap student and course: [0,1] -> [1,0]
-    const order = symbols.cons(one)(symbols.cons(symbols.ZERO)(symbols.nil))
+    const order = symbols.list(one, zero)
     const template = ['', ' has ', ' enrolled']
 
     const invReading = symbols.inverseReading(primary, inverse, order, template)

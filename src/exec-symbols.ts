@@ -1,4 +1,4 @@
-// #region Lambda Calculus Primitives
+// #region Lambda Calculus Primitives and Utilities
 
 const IDENTITY = (n) => n
 const TRUE = (trueCase) => (falseCase) => trueCase
@@ -13,6 +13,7 @@ const snd = (pair) => pair(FALSE)
 const nil = (c) => TRUE
 const ISEMPTY = (L) => L((head) => (tail) => FALSE)
 const cons = (head) => (tail) => (selector) => selector(head)(tail)
+const list = (...args) => args.reduceRight((acc, item) => cons(item)(acc), nil)
 const U = (le) => (x) => le((y) => x(x)(y))
 const Θ = (le) => U(le)(U(le))
 const fold = Θ(
@@ -21,27 +22,6 @@ const fold = Θ(
 )
 const map = (f) => (list) => fold((x) => (acc) => cons(f(x))(acc))(nil)(list)
 const append = (l1) => (l2) => fold(cons)(l2)(l1)
-
-// #endregion
-// #region Arithmatic
-
-const ZERO = (a) => (b) => b
-const SUCC = (n) => (a) => (b) => a(n(a)(b))
-const ADD = (m) => (n) => (a) => (b) => m(SUCC)(n)(a)(b)
-const MULT = (m) => (n) => (a) => (b) => m(n(a))(b)
-const EXP = (m) => (n) => (a) => (b) => n(m)(a)(b)
-const PRED = (n) => (f) => (x) => n((g) => (h) => h(g(f)))((u) => x)((u) => u)
-const SUB = (m) => (n) => n(PRED)(m)
-const ISZERO = (n) => n((x) => ZERO)(TRUE)
-const EQ = (m) => (n) => AND(LE(m)(n))(LE(n)(m))
-const LE = (m) => (n) => ISZERO(SUB(m)(n))
-const GE = (m) => (n) => ISZERO(SUB(n)(m))
-const LT = (m) => (n) => NOT(GE(m)(n))
-const GT = (m) => (n) => NOT(LE(m)(n))
-
-// #endregion
-// #region Utilities
-
 const equals = (a) => (b) => get_id(a) === get_id(b) ? TRUE : FALSE
 const nth = (n) => (list) =>
   Θ(
@@ -53,6 +33,20 @@ const nth = (n) => (list) =>
       ),
   )(n)(list)(ZERO)
 const reorder = (nouns, order) => map((i) => nth(i)(nouns))(order)
+const ZERO = (a) => (b) => b
+const SUCC = (n) => (a) => (b) => a(n(a)(b))
+const UINT = (n) => (n < 0 ? ZERO : Θ((rec) => (m) => m === 0 ? ZERO : SUCC(rec(m - 1)))(n))
+const ADD = (m) => (n) => (a) => (b) => m(SUCC)(n)(a)(b)
+const MULT = (m) => (n) => (a) => (b) => m(n(a))(b)
+const EXP = (m) => (n) => (a) => (b) => n(m)(a)(b)
+const PRED = (n) => (f) => (x) => n((g) => (h) => h(g(f)))((u) => x)((u) => u)
+const SUB = (m) => (n) => n(PRED)(m)
+const ISZERO = (n) => n((x) => ZERO)(TRUE)
+const EQ = (m) => (n) => AND(LE(m)(n))(LE(n)(m))
+const LE = (m) => (n) => ISZERO(SUB(m)(n))
+const GE = (m) => (n) => ISZERO(SUB(n)(m))
+const LT = (m) => (n) => NOT(GE(m)(n))
+const GT = (m) => (n) => NOT(LE(m)(n))
 
 // #endregion
 // #region Nouns
@@ -273,9 +267,11 @@ export {
   nil,
   ISEMPTY,
   cons,
+  list,
   map,
   fold,
   append,
+  UINT,
   /**
    * The zero function.
    * Returns the identity function as a constant. (equivalent to FALSE)
