@@ -133,24 +133,24 @@ const Violation = (constraint) => (noun) => (reason) => (s) => s(constraint, nou
 // #endregion
 // #region Meta-Fact Declarations
 
-const nounType = (name) => FactSymbol('nounType')(cons(unit(name))(nil))
+const nounType = (name) => FactSymbol('nounType')(list(unit(name)))
 
-const factType = (verb, arity) => FactSymbol('factType')(cons(unit(verb))(cons(unit(arity))(nil)))
+const factType = (verb, arity) => FactSymbol('factType')(list(unit(verb), unit(arity)))
 
-const role = (verb, index, name) => FactSymbol('role')(cons(unit(verb))(cons(unit(index))(cons(unit(name))(nil))))
+const role = (verb, index, name) => FactSymbol('role')(list(unit(verb), unit(index), unit(name)))
 
-const reading = (verb, parts) => FactSymbol('reading')(cons(unit(verb))(cons(parts)(nil)))
+const reading = (verb, parts) => FactSymbol('reading')(list(unit(verb), parts))
 
 const inverseReading = (primary, inverse, order, template) =>
-  FactSymbol('inverseReading')(cons(unit(primary))(cons(unit(inverse))(cons(order)(cons(template)(nil)))))
+  FactSymbol('inverseReading')(list(unit(primary), unit(inverse), order, template))
 
-const constraint = (id, modality) => FactSymbol('constraint')(cons(unit(id))(cons(unit(modality))(nil)))
+const constraint = (id, modality) => FactSymbol('constraint')(list(unit(id), unit(modality)))
 
 const constraintTarget = (constraintId, verb, roleIndex) =>
-  FactSymbol('constraintTarget')(cons(unit(constraintId))(cons(unit(verb))(cons(unit(roleIndex))(nil))))
+  FactSymbol('constraintTarget')(list(unit(constraintId), unit(verb), unit(roleIndex)))
 
 const violation = (noun, constraintId, reason) =>
-  FactSymbol('violation')(cons(unit(noun))(cons(unit(constraintId))(cons(unit(reason))(nil))))
+  FactSymbol('violation')(list(unit(noun), unit(constraintId), unit(reason)))
 
 // #endregion
 // #region Reserved Symbols
@@ -159,7 +159,7 @@ const violation = (noun, constraintId, reason) =>
 // The conceptual schema design procedure is an AI-assisted process to create an application schema that runs on top of this framework.
 // The AI gathers information from the user and uses it to create the schema.
 // 1. Transform familiar information examples into elementary facts, and apply quality checks
-// 2. Draw the fact types, and apply a population check
+// 2. Create the fact types, and apply a population check
 // 3. Check for entity types that should be combined, and note any arithmetic derivations
 // 4. Add uniqueness constraints, and check arity of fact types
 // 5. Add mandatory role constraints, and check for logical derivations

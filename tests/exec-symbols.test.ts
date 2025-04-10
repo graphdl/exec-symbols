@@ -581,20 +581,20 @@ describe('Meta-Fact Declarations', () => {
   it('nounType should create a noun type', () => {
     const fact = symbols.nounType('person')
     expect(symbols.get_verb_symbol(fact)).toBe('nounType')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('person')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('person')
   })
 
   it('factType should create a fact type declaration', () => {
     const fact = symbols.factType('loves', 2)
     expect(symbols.get_verb_symbol(fact)).toBe('factType')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('loves')
     expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe(2)
   })
 
   it('role should create a role declaration', () => {
     const fact = symbols.role('loves', 0, 'lover')
     expect(symbols.get_verb_symbol(fact)).toBe('role')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('loves')
     expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe(0)
     expect(symbols.get_id(symbols.nth(two)(symbols.get_nouns(fact)))).toBe('lover')
   })
@@ -603,29 +603,27 @@ describe('Meta-Fact Declarations', () => {
     const template = ['', ' loves ', '']
     const fact = symbols.reading('loves', template)
     expect(symbols.get_verb_symbol(fact)).toBe('reading')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('loves')
   })
 
   it('inverseReading should create an inverse reading declaration', () => {
-    const order = symbols.list(1, 0)
-    const template = ['', ' is loved by ', '']
-    const fact = symbols.inverseReading('loves', 'is_loved_by', order, template)
+    const fact = symbols.inverseReading('loves', 'is_loved_by', symbols.list(1, 0), ['', ' is loved by ', ''])
     expect(symbols.get_verb_symbol(fact)).toBe('inverseReading')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('loves')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('loves')
     expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe('is_loved_by')
   })
 
   it('constraint should create a constraint declaration', () => {
     const fact = symbols.constraint('unique_lover', symbols.ALETHIC)
     expect(symbols.get_verb_symbol(fact)).toBe('constraint')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('unique_lover')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('unique_lover')
     expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe(symbols.ALETHIC)
   })
 
   it('constraintTarget should create a constraint target declaration', () => {
     const fact = symbols.constraintTarget('unique_lover', 'loves', 0)
     expect(symbols.get_verb_symbol(fact)).toBe('constraintTarget')
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(fact)))).toBe('unique_lover')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(fact)))).toBe('unique_lover')
     expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(fact)))).toBe('loves')
     expect(symbols.get_id(symbols.nth(two)(symbols.get_nouns(fact)))).toBe(0)
   })
@@ -743,7 +741,7 @@ describe('Inverse Reading Functionality', () => {
 
     const invReading = symbols.inverseReading(primary, inverse, order, template)
 
-    expect(symbols.get_id(symbols.nth(symbols.ZERO)(symbols.get_nouns(invReading)))).toBe('enrolled_in')
+    expect(symbols.get_id(symbols.fst(symbols.get_nouns(invReading)))).toBe('enrolled_in')
     expect(symbols.get_id(symbols.nth(one)(symbols.get_nouns(invReading)))).toBe('has_enrolled')
   })
 })
