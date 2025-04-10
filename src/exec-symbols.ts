@@ -161,7 +161,36 @@ const violation = (noun, constraintId, reason) =>
 // #endregion
 // #region Reserved Symbols
 
+// TODO: CSDP
+// The conceptual schema design procedure is an AI-assisted process to create an application schema that runs on top of this framework.
+// The AI gathers information from the user and uses it to create the schema.
+// 1. Transform familiar information examples into elementary facts, and apply quality checks
+// 2. Draw the fact types, and apply a population check
+// 3. Check for entity types that should be combined, and note any arithmetic derivations
+// 4. Add uniqueness constraints, and check arity of fact types
+// 5. Add mandatory role constraints, and check for logical derivations
+// 6. Add value, set comparison and subtyping constraints
+// 7. Add other constraints and perform final checks
 const CSDP = Symbol('CSDP')
+
+// TODO: RMAP
+// The relational map function transforms the atomic facts into a relational schema.
+// This is useful for listing properties of an entity or otherwise defining a schema.
+// 0.1 Transform exclusive unaries; map unaries according to their open/closed world semantics.
+// 0.2 Temporarily erase all reference (preferred identification) predicates and treat compositely-identified object types as "black boxes".
+// 0.3 Indicate any absorbtion-overrides (separation or partition) for subtypes.
+// 0.4 Identify any derived fact types that must be stored.
+// 0.5 Indicate mapping choices for symmetric 1:1 cases.
+// 0.6 Consider replacing any disjunctive reference schemes by using an artificial or concatenated identifier or mandatory defaults.
+// 0.7 Indicate mapping choice where required for any objectified associations that have no spanning uniqueness constraint.
+// 1.  Map each fact type with a compound uniqueness constraint to a separate table
+// 2.1 Fact types with functional roles attached to the same object type grouped into the same table, keyed on the object type's identifier
+// 2.2 Map 1:1 cases to a single table, generally favoring fewer nulls
+// 3.  Map each independent object type with no functional roles to a separate table
+// 4.  Unpack each "black box column" into its component attributes
+// 5.1 Map subtype constraints on functional roles to qualified optional columns
+// 5.2 Map subtype constraints on nonfunctional roles to qualified subset constraints
+// 5.3 Map nonfunctional roles of independent object types to column sequences that reference the independent table
 const RMAP = Symbol('RMAP')
 
 // #endregion
