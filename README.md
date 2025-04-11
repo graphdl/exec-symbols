@@ -287,6 +287,35 @@ const isTrue = IF(TRUE)('yes')('no') // 'yes'
 const isFalse = IF(FALSE)('yes')('no') // 'no'
 ```
 
+### Executing a Fact
+
+```js
+// Define a selector that creates a readable string
+const readableSelector = (verb, nouns) => {
+  const nounValues = map(get_id)(nouns);
+  
+  // Get reading for this verb (simplified lookup)
+  const readingInfo = /* lookup reading for verb */;
+  const template = get_reading_template(readingInfo);
+  const order = get_reading_order(readingInfo);
+  
+  // Reorder nouns according to reading order
+  const orderedNouns = reorder(nounValues, order);
+  
+  // Apply template for any arity
+  return fold(
+    (value, index) => (str) => str.replace(`{${index}}`, value),
+    template,
+    orderedNouns
+  );
+}
+
+// Example usage:
+const aliceKnowsBob = FactSymbol('knows')(list(unit('Alice'), unit('Bob')));
+const readableString = aliceKnowsBob(readableSelector);
+// readableString would be something like "Alice knows Bob"
+```
+
 ### Building a Relationship and a Fact
 
 ```js
@@ -394,9 +423,9 @@ const postsType = FactType(3)(postsVerb)(
 // Reading: forward
 reading("posts", ["", " posted ", " in ", ""])
 
-// Inverse reading (manually declared)
-inverseReading("posts", "receivesPostFrom", cons(2)(cons(1)(cons(0)(nil))),
-  ["", " received ", " from ", ""])
+// Inverse reading - thread contains posts
+inverseReading("posts", "contains", cons(2)(cons(1)(cons(0)(nil))),
+  ["", " contains post ", " by ", ""])
 
 // ───────────── FactType: replies ─────────────
 const repliesVerb = args => {
@@ -409,6 +438,10 @@ const repliesType = FactType(3)(repliesVerb)(
 )(nil)
 
 reading("replies", ["", " replied with ", " to ", ""])
+
+// Inverse reading for replies - has reply from
+inverseReading("replies", "hasReplyFrom", cons(2)(cons(1)(cons(0)(nil))),
+  ["", " has reply ", " from ", ""])
 
 // ───────────── FactType: moderates ─────────────
 const moderatesVerb = args => {
@@ -447,20 +480,20 @@ const replyFact = makeVerbFact(repliesType)(bob)(postB)(postA)
 const modFact = makeVerbFact(moderatesType)(alice)(postB)
 
 // ───────────── Events ─────────────
-// Inverse reading list manually provided to Event
+// Inverse reading list provided to Event
 const inverseReadingsForPosts = cons(
-  make_reading("receivesPostFrom", cons(2)(cons(1)(cons(0)(nil))),
-    ["", " received ", " from ", ""])
+  Reading("contains", cons(2)(cons(1)(cons(0)(nil))), 
+    ["", " contains post ", " by ", ""])
 )(nil)
 
-const event1 = Event(postFact, unit("t1"), inverseReadingsForPosts)
-const event2 = Event(replyFact, unit("t2"))
-const event3 = Event(modFact, unit("t3"))
+const event1 = Event(postFact)(unit("t1"))(inverseReadingsForPosts)
+const event2 = Event(replyFact)(unit("t2"))(nil)
+const event3 = Event(modFact)(unit("t3"))(nil)
 
 // ───────────── Constraint Evaluation ─────────────
 const pop = cons(
-  inverseReading("posts", "receivesPostFrom", cons(2)(cons(1)(cons(0)(nil))),
-    ["", " received ", " from ", ""])
+  inverseReading("posts", "contains", cons(2)(cons(1)(cons(0)(nil))),
+    ["", " contains post ", " by ", ""])
 )(nil)
 
 const evalResult = evaluate_with_modality(inverseRequiredForPosts)(pop)
