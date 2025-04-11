@@ -5,7 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     coverage: {
-      exclude: ['tests/**', '**/*.test.ts'],
+      exclude: ['tests/**', '**/*.test.ts', 'dist/**'],
       provider: 'istanbul',
     },
   },

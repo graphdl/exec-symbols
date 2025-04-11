@@ -6,6 +6,7 @@ type Numeral<T = any> = (a: any) => (b: T) => T | ((z: any) => Numeral)
 type Pair<A = any, B = any> = <R = any>(f: (a: A) => (b: B) => R) => R
 type List<T = any> = (head: T) => (tail: List<T>) => List<T>
 
+const NULL = (b: any) => b
 const Identity = <T>(n: T): T => n
 const TRUE =
   <T>(a: T) =>
@@ -92,7 +93,7 @@ const nth =
 const reorder = (nouns: any, order: any): any => map((i: any) => nth(i)(nouns))(order)
 
 // Church numerals
-const ZERO: Numeral = (_a: any) => (b: any) => b
+const ZERO: Numeral = (_a: any) => NULL
 const SUCC =
   (n: Numeral): Numeral =>
   (a: any) =>
@@ -445,12 +446,14 @@ export {
    */
   snd,
   nil,
+  NULL,
   ISEMPTY,
   cons,
   list,
   map,
   fold,
   append,
+  PRED,
   UINT,
   /**
    * The zero function.
