@@ -1,117 +1,277 @@
 // #region Lambda Calculus Primitives and Utilities
 
-const IDENTITY = (n) => n
-const TRUE = (trueCase) => (falseCase) => trueCase
-const FALSE = (trueCase) => (falseCase) => falseCase
-const IF = (condition) => (trueCase) => (falseCase) => condition(trueCase)(falseCase)
-const AND = (p) => (q) => p(q)(FALSE)
-const OR = (p) => (q) => p(TRUE)(q)
-const NOT = (p) => p(FALSE)(TRUE)
-const pair = (a) => (b) => (f) => f(a)(b)
-const fst = (pair) => pair(TRUE)
-const snd = (pair) => pair(FALSE)
-const nil = (c) => TRUE
-const ISEMPTY = (L) => L((head) => (tail) => FALSE)
-const cons = (head) => (tail) => (selector) => selector(head)(tail)
-const list = (...args) => args.reduceRight((acc, item) => cons(item)(acc), nil)
-const U = (le) => (x) => le((y) => x(x)(y))
-const Θ = (le) => U(le)(U(le))
-const fold = Θ(
-  (recFold) => (f) => (acc) => (list) =>
-    IF(ISEMPTY(list))(acc)(list((head) => (tail) => f(head)(recFold(f)(acc)(tail)))),
+// Basic type definitions - using any when needed to express Church encodings
+type Truth = <T>(a: T) => (b: T) => T
+type Numeral<T = any> = (a: any) => (b: T) => T | ((z: any) => Numeral)
+type Pair<A = any, B = any> = <R = any>(f: (a: A) => (b: B) => R) => R
+type List<T = any> = (head: T) => (tail: List<T>) => List<T>
+
+const Identity = <T>(n: T): T => n
+const TRUE =
+  <T>(a: T) =>
+  (_b: T): T =>
+    a
+const FALSE =
+  <T>(_a: T) =>
+  (b: T): T =>
+    b
+const IF =
+  <T>(condition: Truth) =>
+  (trueCase: T) =>
+  (falseCase: T): T =>
+    condition(trueCase)(falseCase)
+const AND =
+  (p: Truth) =>
+  (q: Truth): Truth =>
+    p(q)(FALSE)
+const OR =
+  (p: Truth) =>
+  (q: Truth): Truth =>
+    p(TRUE)(q)
+const NOT = (p: Truth): Truth => p(FALSE)(TRUE)
+const pair =
+  <A = any, B = A>(a: A) =>
+  (b: B): Pair<A, B> =>
+  (f) =>
+    f(a)(b)
+const fst = <A = any, B = A | ((a: any) => A)>(p: (f: (a: A) => (b: B) => A) => A): A => p((a) => (_) => a)
+const snd = <A = any, B = A | ((a: any) => A)>(p: (f: (a: A) => (b: B) => B) => B): B => p((_) => (b) => b)
+const nil: List =
+  <T = any>(_c: T) =>
+  (a: T) =>
+  (_b: T) =>
+    a
+const ISEMPTY = (L: (head: any) => (tail: any) => any): Truth => L((_head: any) => (_tail: any) => FALSE)
+const cons =
+  <T = any>(head: T) =>
+  (tail: List<T>): List<T> =>
+  (selector: any) =>
+    selector(head)(tail)
+const list = <T = any>(...args: T[]): List<T> => args.reduceRight((acc, item) => cons(item)(acc), nil)
+
+// Type-erased recursion combinators
+const U = (le: any) => (x: any) => le((y: any) => x(x)(y))
+const Θ = (le: any) => U(le)(U(le))
+
+// List operations with any types
+const fold: any = Θ(
+  (recFold: any) => (f: any) => (acc: any) => (list: List) =>
+    IF(ISEMPTY(list))(acc)(list((head: any) => (tail: any) => f(head)(recFold(f)(acc)(tail)))),
 )
-const map = (f) => (list) => fold((x) => (acc) => cons(f(x))(acc))(nil)(list)
-const append = (l1) => (l2) => fold(cons)(l2)(l1)
-const equals = (a) => (b) => get_id(a) === get_id(b) ? TRUE : FALSE
-const nth = (n) => (list) =>
-  Θ(
-    (recNth) => (targetN) => (currentList) => (currentIndex) =>
-      IF(ISEMPTY(currentList))(nil)(
-        IF(EQ(currentIndex)(targetN))(currentList((h) => (_) => h))(
-          currentList((h) => (t) => recNth(targetN)(t)(SUCC(currentIndex))),
-        ),
-      ),
-  )(n)(list)(ZERO)
-const reorder = (nouns, order) => map((i) => nth(i)(nouns))(order)
-const ZERO = (a) => (b) => b
-const SUCC = (n) => (a) => (b) => a(n(a)(b))
-const UINT = (n) => (n < 0 ? ZERO : Θ((rec) => (m) => m === 0 ? ZERO : SUCC(rec(m - 1)))(n))
-const ADD = (m) => (n) => (a) => (b) => m(SUCC)(n)(a)(b)
-const MULT = (m) => (n) => (a) => (b) => m(n(a))(b)
-const EXP = (m) => (n) => (a) => (b) => n(m)(a)(b)
-const PRED = (n) => (f) => (x) => n((g) => (h) => h(g(f)))((u) => x)((u) => u)
-const SUB = (m) => (n) => n(PRED)(m)
-const ISZERO = (n) => n((x) => ZERO)(TRUE)
-const EQ = (m) => (n) => AND(LE(m)(n))(LE(n)(m))
-const LE = (m) => (n) => ISZERO(SUB(m)(n))
-const GE = (m) => (n) => ISZERO(SUB(n)(m))
-const LT = (m) => (n) => NOT(GE(m)(n))
-const GT = (m) => (n) => NOT(LE(m)(n))
+
+const map =
+  (f: any) =>
+  <T>(list: List<T>): any =>
+    fold((x: any) => (acc: any) => cons(f(x))(acc))(nil)(list)
+
+const append =
+  <T = any>(l1: List<T>) =>
+  <V = T>(l2: List<V>): List<T | V> =>
+    fold(cons)(l2)(l1)
+
+const equals =
+  (a: any) =>
+  (b: any): Truth =>
+    get_id(a) === get_id(b) ? TRUE : FALSE
+
+const nth =
+  (n: Numeral) =>
+  <T>(list: List<T>): any =>
+    Θ(
+      (recNth: any) =>
+        (targetN: Numeral) =>
+        (currentList: any) =>
+        (currentIndex: Numeral): any =>
+          IF(ISEMPTY(currentList))(nil)(
+            IF(EQ(currentIndex)(targetN))(currentList((h: any) => (_: any) => h))(
+              currentList((h: any) => (t: any) => recNth(targetN)(t)(SUCC(currentIndex))),
+            ),
+          ),
+    )(n)(list)(ZERO)
+
+const reorder = (nouns: any, order: any): any => map((i: any) => nth(i)(nouns))(order)
+
+// Church numerals
+const ZERO: Numeral = (_a: any) => (b: any) => b
+const SUCC =
+  (n: Numeral): Numeral =>
+  (a: any) =>
+  (b: any) =>
+    a(n(a)(b))
+const UINT = (n: number): Numeral =>
+  n < 0 ? ZERO : Θ((rec: any) => (m: number) => m === 0 ? ZERO : SUCC(rec(m - 1)))(n)
+const ADD =
+  (m: Numeral) =>
+  (n: Numeral): Numeral =>
+  (a: any) =>
+  (b: any) =>
+    m(SUCC)(n)(a)(b)
+const MULT =
+  (m: Numeral) =>
+  (n: Numeral): Numeral =>
+  (a: any) =>
+  (b: any) =>
+    m(n(a))(b)
+const EXP =
+  (m: Numeral) =>
+  (n: Numeral): Numeral =>
+  (a: any) =>
+  (b: any) =>
+    n(m)(a)(b)
+const PRED =
+  (n: Numeral): Numeral =>
+  (f: any) =>
+  (x: any) =>
+    n((g: any) => (h: any) => h(g(f)))((u: any) => x)((u: any) => u)
+const SUB =
+  (m: Numeral) =>
+  (n: Numeral): Numeral =>
+    n(PRED)(m)
+const ISZERO = (n: Numeral): Truth => n((_x: any) => ZERO)(TRUE) as Truth
+const EQ =
+  (m: Numeral) =>
+  (n: Numeral): Truth =>
+    AND(LE(m)(n))(LE(n)(m))
+const LE =
+  (m: Numeral) =>
+  (n: Numeral): Truth =>
+    ISZERO(SUB(m)(n))
+const GE =
+  (m: Numeral) =>
+  (n: Numeral): Truth =>
+    ISZERO(SUB(n)(m))
+const LT =
+  (m: Numeral) =>
+  (n: Numeral): Truth =>
+    NOT(GE(m)(n))
+const GT =
+  (m: Numeral) =>
+  (n: Numeral): Truth =>
+    NOT(LE(m)(n))
 
 // #endregion
 // #region Nouns
 
-const Noun = (id) => (s) => s(id)
-const unit = (id) => Noun(id)
-const bind = (e) => (f) => e((id) => f(id))
-const get_id = (e) => e((id) => id)
+type NounFn<T> = (selector: (id: T) => any) => any
+
+const Noun =
+  <T>(id: T): NounFn<T> =>
+  (s) =>
+    s(id)
+const unit = <T>(id: T): NounFn<T> => Noun(id)
+const bind =
+  <T, R>(e: NounFn<T>) =>
+  (f: (id: T) => NounFn<R>): NounFn<R> =>
+    e((id) => f(id))
+const get_id = <T>(e: NounFn<T>): T => e((id) => id)
 
 // #endregion
 // #region Readings
 
-const Reading = (verb, order, template) => (s) => s(verb, order, template)
+type ReadingFn = (s: (verb: any, order: any, template: any) => any) => any
 
-const get_reading_verb = (r) => r((v, o, t) => v)
-const get_reading_order = (r) => r((v, o, t) => o)
-const get_reading_template = (r) => r((v, o, t) => t)
+const Reading =
+  (verb: any, order: any, template: any): ReadingFn =>
+  (s) =>
+    s(verb, order, template)
+
+const get_reading_verb = (r: ReadingFn): any => r((v, o, t) => v)
+const get_reading_order = (r: ReadingFn): any => r((v, o, t) => o)
+const get_reading_template = (r: ReadingFn): any => r((v, o, t) => t)
 
 // #endregion
 // #region FactType
 
-const FactType = (arity) => (verbFn) => (reading) => (constraints) => (s) => s(arity, verbFn, reading, constraints)
+type FactTypeFn = (s: (arity: any, verbFn: any, reading: any, constraints: any) => any) => any
 
-const get_arity = (rt) => rt((a, v, r, c) => a)
-const get_verb = (rt) => rt((a, v, r, c) => v)
-const get_reading = (rt) => rt((a, v, r, c) => r)
-const get_constraints = (rt) => rt((a, v, r, c) => c)
+const FactType =
+  (arity: any) =>
+  (verbFn: any) =>
+  (reading: any) =>
+  (constraints: any): FactTypeFn =>
+  (s) =>
+    s(arity, verbFn, reading, constraints)
+
+const get_arity = (rt: FactTypeFn): any => rt((a, v, r, c) => a)
+const get_verb = (rt: FactTypeFn): any => rt((a, v, r, c) => v)
+const get_reading = (rt: FactTypeFn): any => rt((a, v, r, c) => r)
+const get_constraints = (rt: FactTypeFn): any => rt((a, v, r, c) => c)
 
 // #endregion
 // #region Executable Facts
 
-const makeVerbFact = (FactType) =>
+const makeVerbFact = (FactType: FactTypeFn): any =>
   Θ(
-    (curry) => (args) => (n) =>
-      n === 0 ? get_verb(FactType)(args) : (arg) => curry(append(args)(cons(arg)(nil)))(n - 1),
+    (curry: any) => (args: any) => (n: any) =>
+      n === 0 ? get_verb(FactType)(args) : (arg: any) => curry(append(args)(cons(arg)(nil)))(n - 1),
   )(nil)(get_arity(FactType))
 
-const FactSymbol = (verb) => (nouns) => (s) => s(verb, nouns)
-const get_verb_symbol = (f) => f((v, e) => v)
-const get_nouns = (f) => f((v, e) => e)
+type FactSymbolFn = (s: (verb: any, nouns: any) => any) => any
+
+const FactSymbol =
+  (verb: any) =>
+  (nouns: any): FactSymbolFn =>
+  (s) =>
+    s(verb, nouns)
+
+const get_verb_symbol = (f: FactSymbolFn): any => f((v, e) => v)
+const get_nouns = (f: FactSymbolFn): any => f((v, e) => e)
 
 // #endregion
 // #region Events with Readings (look up inverses externally)
 
-const Event = (fact) => (time) => (readings) => (s) => s(fact, time, readings)
-const get_fact = (e) => e((f, t, r) => f)
-const get_time = (e) => e((f, t, r) => t)
-const get_event_readings = (e) => e((f, t, r) => r)
+type EventFn = (s: (fact: any, time: any, readings: any) => any) => any
+
+const Event =
+  (fact: any) =>
+  (time: any) =>
+  (readings: any): EventFn =>
+  (s) =>
+    s(fact, time, readings)
+
+const get_fact = (e: EventFn): any => e((f, t, r) => f)
+const get_time = (e: EventFn): any => e((f, t, r) => t)
+const get_event_readings = (e: EventFn): any => e((f, t, r) => r)
 
 // #endregion
 // #region State Machine
 
-const unit_state = (a) => (s) => pair(a)(s)
+const unit_state =
+  (a: any) =>
+  (s: any): any =>
+    pair(a)(s)
 
-const bind_state = (m) => (f) => (s) => ((result) => f(fst(result))(snd(result)))(m(s))
+const bind_state =
+  (m: any) =>
+  (f: any) =>
+  (s: any): any => {
+    const result = m(s)
+    return f(fst(result))(snd(result))
+  }
 
-const make_transition = (guard) => (compute_next) => (state) => (input) =>
-  IF(guard(state)(input))(compute_next(state)(input))(state)
+const make_transition =
+  (guard: any) =>
+  (compute_next: any) =>
+  (state: any) =>
+  (input: any): any =>
+    IF(guard(state)(input))(compute_next(state)(input))(state)
 
-const unguarded = make_transition((_s) => (_i) => TRUE)
+const unguarded = make_transition((_s: any) => (_i: any) => TRUE)
 
-const StateMachine = (transition) => (initial) => (s) => s(transition, initial)
+type StateMachineFn = (s: (transition: any, initial: any) => any) => any
 
-const run_machine = (machine) => (stream) =>
-  machine((transition, initial) => fold((event) => (state) => transition(state)(get_fact(event)))(initial)(stream))
+const StateMachine =
+  (transition: any) =>
+  (initial: any): StateMachineFn =>
+  (s) =>
+    s(transition, initial)
+
+const run_machine =
+  (machine: StateMachineFn) =>
+  (stream: any): any =>
+    machine((transition: any, initial: any) =>
+      fold((event: any) => (state: any) => transition(state)(get_fact(event)))(initial)(stream),
+    )
 
 // #endregion
 // #region Constraints & Violations
@@ -119,37 +279,57 @@ const run_machine = (machine) => (stream) =>
 const ALETHIC = 'alethic'
 const DEONTIC = 'deontic'
 
-const Constraint = (modality) => (predicate) => (s) => s(modality, predicate)
-const get_modality = (c) => c((m, _) => m)
-const get_predicate = (c) => c((_, p) => p)
+type ConstraintFn = (s: (modality: any, predicate: any) => any) => any
 
-const evaluate_constraint = (constraint) => (pop) => get_predicate(constraint)(pop)
+const Constraint =
+  (modality: any) =>
+  (predicate: any): ConstraintFn =>
+  (s) =>
+    s(modality, predicate)
 
-const evaluate_with_modality = (constraint) => (pop) =>
-  pair(get_modality(constraint))(evaluate_constraint(constraint)(pop))
+const get_modality = (c: ConstraintFn): any => c((m, _) => m)
+const get_predicate = (c: ConstraintFn): any => c((_, p) => p)
 
-const Violation = (constraint) => (noun) => (reason) => (s) => s(constraint, noun, reason)
+const evaluate_constraint =
+  (constraint: ConstraintFn) =>
+  (pop: any): any =>
+    get_predicate(constraint)(pop)
+
+const evaluate_with_modality =
+  (constraint: ConstraintFn) =>
+  (pop: any): any =>
+    pair(get_modality(constraint))(evaluate_constraint(constraint)(pop))
+
+type ViolationFn = (s: (constraint: any, noun: any, reason: any) => any) => any
+
+const Violation =
+  (constraint: any) =>
+  (noun: any) =>
+  (reason: any): ViolationFn =>
+  (s) =>
+    s(constraint, noun, reason)
 
 // #endregion
 // #region Meta-Fact Declarations
 
-const nounType = (name) => FactSymbol('nounType')(list(unit(name)))
+const nounType = (name: any): FactSymbolFn => FactSymbol('nounType')(list(unit(name)))
 
-const factType = (verb, arity) => FactSymbol('factType')(list(unit(verb), unit(arity)))
+const factType = (verb: any, arity: any): FactSymbolFn => FactSymbol('factType')(list(unit(verb), unit(arity)))
 
-const role = (verb, index, name) => FactSymbol('role')(list(unit(verb), unit(index), unit(name)))
+const role = (verb: any, index: any, name: any): FactSymbolFn =>
+  FactSymbol('role')(list(unit(verb), unit(index), unit(name)))
 
-const reading = (verb, parts) => FactSymbol('reading')(list(unit(verb), parts))
+const reading = (verb: any, parts: any): FactSymbolFn => FactSymbol('reading')(list(unit(verb), parts))
 
-const inverseReading = (primary, inverse, order, template) =>
+const inverseReading = (primary: any, inverse: any, order: any, template: any): FactSymbolFn =>
   FactSymbol('inverseReading')(list(unit(primary), unit(inverse), order, template))
 
-const constraint = (id, modality) => FactSymbol('constraint')(list(unit(id), unit(modality)))
+const constraint = (id: any, modality: any): FactSymbolFn => FactSymbol('constraint')(list(unit(id), unit(modality)))
 
-const constraintTarget = (constraintId, verb, roleIndex) =>
+const constraintTarget = (constraintId: any, verb: any, roleIndex: any): FactSymbolFn =>
   FactSymbol('constraintTarget')(list(unit(constraintId), unit(verb), unit(roleIndex)))
 
-const violation = (noun, constraintId, reason) =>
+const violation = (noun: any, constraintId: any, reason: any): FactSymbolFn =>
   FactSymbol('violation')(list(unit(noun), unit(constraintId), unit(reason)))
 
 // #endregion
@@ -195,7 +375,7 @@ export {
    * @param n - The value to return.
    * @returns The value.
    */
-  IDENTITY,
+  Identity,
   /**
    * The true function.
    * Returns the first parameter.
@@ -411,4 +591,8 @@ export {
   DEONTIC,
   RMAP,
   CSDP,
+  type Truth,
+  type Numeral,
+  type Pair,
+  type List,
 }

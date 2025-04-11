@@ -14,9 +14,9 @@ import {
   FactType,
   GE,
   GT,
-  IDENTITY,
   IF,
   ISEMPTY,
+  Identity,
   LE,
   LT,
   MULT,
@@ -76,6 +76,8 @@ import {
   unit,
   unit_state,
   violation,
+  type List,
+  type Numeral,
 } from '../src/exec-symbols'
 
 const zero = ZERO
@@ -91,10 +93,10 @@ const nine = SUCC(eight)
 describe('Lambda Calculus Primitives', () => {
   describe('IDENTITY', () => {
     it('should return the input value', () => {
-      expect(IDENTITY(5)).toBe(5)
-      expect(IDENTITY('test')).toBe('test')
+      expect(Identity(5)).toBe(5)
+      expect(Identity('test')).toBe('test')
       const obj = { a: 1 }
-      expect(IDENTITY(obj)).toBe(obj)
+      expect(Identity(obj)).toBe(obj)
     })
   })
 
@@ -110,7 +112,7 @@ describe('Lambda Calculus Primitives', () => {
 
   describe('IF', () => {
     it('should return the first argument when condition is TRUE', () => {
-      expect(IF(TRUE)('then')('else')).toBe('then')
+      expect(IF<string>(TRUE)('then')('else')).toBe('then')
     })
 
     it('should return the second argument when condition is FALSE', () => {
@@ -161,8 +163,8 @@ describe('Lambda Calculus Primitives', () => {
   describe('Church Lists and Pairs', () => {
     it('pair should create a pair that can be accessed with a function', () => {
       const p = pair(1)(2)
-      expect(p((a: any) => (b: any) => a)).toBe(1)
-      expect(p((a: any) => (b: any) => b)).toBe(2)
+      expect(p((a: number) => (b: number) => a)).toBe(1)
+      expect(p((a: number) => (b: number) => b)).toBe(2)
     })
 
     it('fst should extract the first element of a pair', () => {
@@ -191,7 +193,7 @@ describe('Lambda Calculus Primitives', () => {
       const oneElementList = cons(zero)(emptyList)
 
       // Create a list with multiple elements using list instead of cons
-      const multiElementList = list(zero, one, two)
+      const multiElementList: List = list(zero, one, two)
 
       // Verify one element list
       expect(fst(oneElementList)).toEqual(zero)
@@ -201,7 +203,7 @@ describe('Lambda Calculus Primitives', () => {
       expect(fst(snd(multiElementList))).toEqual(one)
 
       // Test cons adds to the front by creating a new list
-      const newList = cons(eight)(multiElementList)
+      const newList: List = cons(eight)(multiElementList)
 
       // Original list should be unchanged
       expect(fst(multiElementList)).toEqual(zero)
@@ -224,7 +226,7 @@ describe('Lambda Calculus Primitives', () => {
       const l = list(zero, one, two)
 
       // Test a simpler transformation: increment by one
-      const incremented = map((x: any) => SUCC(x))(l)
+      const incremented = map((x: Numeral) => SUCC(x))(l)
 
       // Now test that: zero+1=one, one+1=two, two+1=three
       expect(EQ(fst(incremented))(one)('yes')('no')).toEqual('yes')
@@ -238,8 +240,8 @@ describe('Lambda Calculus Primitives', () => {
       const joined = append(list1)(list2)
       expect(fst(joined)).toEqual(zero)
       expect(fst(snd(joined))).toEqual(one)
-      expect(fst(snd(snd(joined)))).toEqual(two)
-      expect(fst(snd(snd(snd(joined))))).toEqual(three)
+      expect(fst<Numeral>(snd(snd(joined)))).toEqual(two)
+      expect(fst<Numeral>(snd(snd(snd(joined))))).toEqual(three)
     })
   })
 
@@ -256,7 +258,7 @@ describe('Lambda Calculus Primitives', () => {
       expect(result).toBe(5)
 
       // We can also test that it equals a function that returns the identity function
-      expect(EQ(ZERO)((a: any) => IDENTITY)('yes')('no')).toBe('yes')
+      expect(EQ(ZERO)((a: any) => Identity)('yes')('no')).toBe('yes')
     })
 
     it('UINT should convert JavaScript numbers to Church numerals', () => {

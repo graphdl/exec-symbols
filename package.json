@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/exec-symbols.js",
   "scripts": {
+    "build": "tsc",
     "test": "vitest --run",
     "test:coverage": "vitest --coverage --run"
   },

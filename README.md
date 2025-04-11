@@ -2,9 +2,9 @@
 
 [![Tests](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml/badge.svg)](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml)
 
-A **purely functional DSL** for modeling facts, nouns, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
+A **purely functional TypeScript library** for modeling facts, nouns, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
 
-This library showcases how to represent *boolean logic, pairs, lists, nouns, relationships, constraints, events, and more* all as functional closures. It may be useful for educational purposes, rule engines, or domain-specific language experiments.
+This library showcases how to represent *boolean logic, pairs, lists, nouns, relationships, constraints, events, and more* all as functional closures. It may be used for rule engines or domain-specific language experiments.
 
 ---
 
