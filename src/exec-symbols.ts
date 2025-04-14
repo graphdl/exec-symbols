@@ -1,341 +1,216 @@
 // #region Lambda Calculus Primitives and Utilities
-
-// Basic type definitions - using any when needed to express Church encodings
-type Truth = <T>(a: T) => (b: T) => T
-type Numeral<T = any> = (a: any) => (b: T) => T | ((z: any) => Numeral)
-type Pair<A = any, B = any> = <R = any>(f: (a: A) => (b: B) => R) => R
-type List<T = any> = (head: T) => (tail: List<T>) => List<T>
-
-const NULL = (b: any) => b
-const Identity = <T>(n: T): T => n
-const TRUE =
+type Truth = <T>(a: T) => (_b: T) => T
+type Numeral = <T>(a: (...args: [T]) => T) => (b: T) => T
+const NULL = <T>(b: T) => b
+const Identity = <T>(n: T) => n
+const TRUE: Truth =
   <T>(a: T) =>
-  (_b: T): T =>
+  (_b: T) =>
     a
-const FALSE =
+const FALSE: Truth =
   <T>(_a: T) =>
-  (b: T): T =>
+  (b: T) =>
     b
 const IF =
   <T>(condition: Truth) =>
   (trueCase: T) =>
-  (falseCase: T): T =>
+  (falseCase: T) =>
     condition(trueCase)(falseCase)
-const AND =
-  (p: Truth) =>
-  (q: Truth): Truth =>
-    p(q)(FALSE)
-const OR =
-  (p: Truth) =>
-  (q: Truth): Truth =>
-    p(TRUE)(q)
-const NOT = (p: Truth): Truth => p(FALSE)(TRUE)
+const AND: (p: Truth) => (q: Truth) => Truth = (p) => (q) => p(q)(FALSE)
+const OR: (p: Truth) => (q: Truth) => Truth = (p) => (q) => p(TRUE)(q)
+const NOT: (p: Truth) => Truth = (p) => p(FALSE)(TRUE)
+type Pair<A, B> = <T>(f: (a: A) => (b: B) => T) => T
 const pair =
-  <A = any, B = A>(a: A) =>
-  (b: B): Pair<A, B> =>
-  (f) =>
+  <A>(a: A) =>
+  <B>(b: B): Pair<A, B> =>
+  <T>(f: (a: A) => (b: B) => T): T =>
     f(a)(b)
-const fst = <A = any, B = A | ((a: any) => A)>(p: (f: (a: A) => (b: B) => A) => A): A => p((a) => (_) => a)
-const snd = <A = any, B = A | ((a: any) => A)>(p: (f: (a: A) => (b: B) => B) => B): B => p((_) => (b) => b)
-const nil: List =
-  <T = any>(_c: T) =>
-  (a: T) =>
-  (_b: T) =>
+
+const fst = <A, B>(p: Pair<A, B>): A => p((a: A) => (_: B) => a)
+const snd = <A, B>(p) => p((_: A) => (b: B) => b)
+const nil =
+  <C>(_c: C) =>
+  <A>(a: A) =>
+  <B>(_b: B) =>
     a
-const ISEMPTY = (L: (head: any) => (tail: any) => any): Truth => L((_head: any) => (_tail: any) => FALSE)
+const ISEMPTY = (L) =>
+  L(
+    <H>(_head: H) =>
+      <T>(_tail: T) =>
+      <A>(_a: A) =>
+      (b: A) =>
+        b,
+  )
 const cons =
-  <T = any>(head: T) =>
-  (tail: List<T>): List<T> =>
-  (selector: any) =>
+  <H>(head: H) =>
+  <T>(tail: T) =>
+  <O>(selector: (head: H) => (tail: T) => O) =>
     selector(head)(tail)
-const list = <T = any>(...args: T[]): List<T> => args.reduceRight((acc, item) => cons(item)(acc), nil)
-
-// Type-erased recursion combinators
-const U = (le: any) => (x: any) => le((y: any) => x(x)(y))
-const Θ = (le: any) => U(le)(U(le))
-
-// List operations with any types
-const fold: any = Θ(
-  (recFold: any) => (f: any) => (acc: any) => (list: List) =>
-    IF(ISEMPTY(list))(acc)(list((head: any) => (tail: any) => f(head)(recFold(f)(acc)(tail)))),
+const list = (...args: unknown[]) => args.reduceRight((acc, item) => cons(item)(acc), nil)
+const U = (le) => (x) => le((y) => x(x)(y))
+const Θ = <T, V>(le: (a: (m: T) => V) => (m: T) => V) => U(le)(U(le))
+type List<T> = <R>(selector: <A>(isEmpty: R) => <B>(cons: (head: T) => (tail: List<T>) => R) => R) => R
+const fold = Θ(
+  <T, R>(recFold: (f: (head: T) => (acc: R) => R) => (acc: R) => (list: List<T>) => R) =>
+    (f: (head: T) => (acc: R) => R) =>
+    (acc: R) =>
+    (list: List<T>) =>
+      IF(ISEMPTY(list))(acc)(list((head: T) => (tail: List<T>) => f(head)(recFold(f)(acc)(tail)))),
 )
-
-const map =
-  (f: any) =>
-  <T>(list: List<T>): any =>
-    fold((x: any) => (acc: any) => cons(f(x))(acc))(nil)(list)
-
+const map = (f) => (list) => fold((x) => (acc) => cons(f(x))(acc))(nil)(list)
 const append =
-  <T = any>(l1: List<T>) =>
-  <V = T>(l2: List<V>): List<T | V> =>
+  <A>(l1: A) =>
+  <B>(l2: B) =>
     fold(cons)(l2)(l1)
-
-const equals =
-  (a: any) =>
-  (b: any): Truth =>
-    get_id(a) === get_id(b) ? TRUE : FALSE
-
-const nth =
-  (n: Numeral) =>
-  <T>(list: List<T>): any =>
-    Θ(
-      (recNth: any) =>
-        (targetN: Numeral) =>
-        (currentList: any) =>
-        (currentIndex: Numeral): any =>
-          IF(ISEMPTY(currentList))(nil)(
-            IF(EQ(currentIndex)(targetN))(currentList((h: any) => (_: any) => h))(
-              currentList((h: any) => (t: any) => recNth(targetN)(t)(SUCC(currentIndex))),
-            ),
-          ),
-    )(n)(list)(ZERO)
-
-const reorder = (nouns: any, order: any): any => map((i: any) => nth(i)(nouns))(order)
-
-// Church numerals
-const ZERO: Numeral = (_a: any) => NULL
-const SUCC =
-  (n: Numeral): Numeral =>
-  (a: any) =>
-  (b: any) =>
-    a(n(a)(b))
-const UINT = (n: number): Numeral =>
-  n < 0 ? ZERO : Θ((rec: any) => (m: number) => m === 0 ? ZERO : SUCC(rec(m - 1)))(n)
-const ADD =
-  (m: Numeral) =>
-  (n: Numeral): Numeral =>
-  (a: any) =>
-  (b: any) =>
-    m(SUCC)(n)(a)(b)
-const MULT =
-  (m: Numeral) =>
-  (n: Numeral): Numeral =>
-  (a: any) =>
-  (b: any) =>
-    m(n(a))(b)
-const EXP =
-  (m: Numeral) =>
-  (n: Numeral): Numeral =>
-  (a: any) =>
-  (b: any) =>
-    n(m)(a)(b)
-const PRED =
-  (n: Numeral): Numeral =>
-  (f: any) =>
-  (x: any) =>
-    n((g: any) => (h: any) => h(g(f)))((u: any) => x)((u: any) => u)
-const SUB =
-  (m: Numeral) =>
-  (n: Numeral): Numeral =>
-    n(PRED)(m)
-const ISZERO = (n: Numeral): Truth => n((_x: any) => ZERO)(TRUE) as Truth
-const EQ =
-  (m: Numeral) =>
-  (n: Numeral): Truth =>
-    AND(LE(m)(n))(LE(n)(m))
-const LE =
-  (m: Numeral) =>
-  (n: Numeral): Truth =>
-    ISZERO(SUB(m)(n))
-const GE =
-  (m: Numeral) =>
-  (n: Numeral): Truth =>
-    ISZERO(SUB(n)(m))
-const LT =
-  (m: Numeral) =>
-  (n: Numeral): Truth =>
-    NOT(GE(m)(n))
-const GT =
-  (m: Numeral) =>
-  (n: Numeral): Truth =>
-    NOT(LE(m)(n))
-
-// #endregion
-// #region Nouns
-
-type NounFn<T> = (selector: (id: T) => any) => any
-
+const nth = (n: Numeral) => (list) =>
+  Θ(
+    (recNth) => (targetN) => (currentList) => (currentIndex) =>
+      IF(ISEMPTY(currentList))(nil)(
+        IF(EQ(currentIndex)(targetN))(currentList((h) => () => h))(
+          currentList((h) => (t) => recNth(targetN)(t)(SUCC(currentIndex))),
+        ),
+      ),
+  )(n)(list)(ZERO)
+const reorder =
+  <N>(nouns: N) =>
+  <O>(order: O) =>
+    map((i: Numeral) => nth(i)(nouns))(order) as N
+// a function that calls a function zero times
+const ZERO: Numeral =
+  <T>(_a: (...args: [T]) => T) =>
+  (b: T) =>
+    b
+// increases the number of times a numeral's function is called
+const SUCC: (n: Numeral) => Numeral = (n) => (a) => (b) => a(n(a)(b))
+const UINT: (n: number) => Numeral = (n: number) =>
+  n < 0 ? ZERO : Θ<number, Numeral>((rec) => (m) => m === 0 ? ZERO : SUCC(rec(m - 1)))(n)
+const ADD: (m: Numeral) => (n: Numeral) => Numeral = (m) => (n) => (a) => (b) => m(SUCC)(n)(a)(b)
+const MULT: (m: Numeral) => (n: Numeral) => Numeral = (m) => (n) => (a) => (b) => m(n(a))(b)
+const EXP: (m: Numeral) => (n: Numeral) => Numeral = (m: Numeral) => (n: Numeral) => (a) => (b) => n(m)(a)(b)
+const PRED: (n: Numeral) => Numeral = (n) => (f) => (x) => n((g) => (h) => h(g(f)))((u) => x)((u) => u)
+const SUB: (m: Numeral) => (n: Numeral) => Numeral = (m: Numeral) => (n: Numeral) => n(PRED)(m)
+const ISZERO: (n: Numeral) => Truth = (n) => n((_x) => FALSE)(TRUE) as Truth
+const EQ = (m: Numeral) => (n: Numeral) => AND(LE(m)(n))(LE(n)(m))
+const LE = (m: Numeral) => (n: Numeral) => ISZERO(SUB(m)(n))
+const GE = (m: Numeral) => (n: Numeral) => ISZERO(SUB(n)(m))
+const LT = (m: Numeral) => (n: Numeral) => NOT(GE(m)(n))
+const GT = (m: Numeral) => (n: Numeral) => NOT(LE(m)(n))
 const Noun =
-  <T>(id: T): NounFn<T> =>
-  (s) =>
+  <T = unknown, O = T>(id: T) =>
+  (s: (id: T) => O) =>
     s(id)
-const unit = <T>(id: T): NounFn<T> => Noun(id)
+const unit = <T = unknown>(id: T) => Noun(id)
 const bind =
-  <T, R>(e: NounFn<T>) =>
-  (f: (id: T) => NounFn<R>): NounFn<R> =>
-    e((id) => f(id))
-const get_id = <T>(e: NounFn<T>): T => e((id) => id)
-
-// #endregion
-// #region Readings
-
-type ReadingFn = (s: (verb: any, order: any, template: any) => any) => any
-
+  <A>(e: A) =>
+  <B>(f: B) =>
+    e(<T>(id: T) => f(id))
+const get_id = (e) => e((id) => id)
+const equals = (a) => (b) => get_id(a) === get_id(b) ? TRUE : FALSE
+type ReadingType<V, O, T> = <S>(selector: (verb: V) => (order: O) => (template: T) => S) => S
 const Reading =
-  (verb: any, order: any, template: any): ReadingFn =>
-  (s) =>
-    s(verb, order, template)
-
-const get_reading_verb = (r: ReadingFn): any => r((v, o, t) => v)
-const get_reading_order = (r: ReadingFn): any => r((v, o, t) => o)
-const get_reading_template = (r: ReadingFn): any => r((v, o, t) => t)
-
-// #endregion
-// #region FactType
-
-type FactTypeFn = (s: (arity: any, verbFn: any, reading: any, constraints: any) => any) => any
-
+  <V, O, T>(verb: V) =>
+  (order: O) =>
+  (template: T): ReadingType<V, O, T> =>
+  <S>(selector: (verb: V) => (order: O) => (template: T) => S): S =>
+    selector(verb)(order)(template)
+const get_reading_verb = <V, O, T>(r: ReadingType<V, O, T>): V => r((v: V) => (_o: O) => (_t: T) => v)
+const get_reading_order = <V, O, T>(r: ReadingType<V, O, T>): O => r((_v: V) => (o: O) => (_t: T) => o)
+const get_reading_template = <V, O, T>(r: ReadingType<V, O, T>): T => r((_v: V) => (_o: O) => (t: T) => t)
 const FactType =
-  (arity: any) =>
-  (verbFn: any) =>
-  (reading: any) =>
-  (constraints: any): FactTypeFn =>
-  (s) =>
-    s(arity, verbFn, reading, constraints)
-
-const get_arity = (rt: FactTypeFn): any => rt((a, v, r, c) => a)
-const get_verb = (rt: FactTypeFn): any => rt((a, v, r, c) => v)
-const get_reading = (rt: FactTypeFn): any => rt((a, v, r, c) => r)
-const get_constraints = (rt: FactTypeFn): any => rt((a, v, r, c) => c)
-
+  <A>(arity: A) =>
+  <V>(verbFn: V) =>
+  <R>(reading: R) =>
+  <C>(constraints: C) =>
+  <O>(s: (arity: A) => (verbFn: V) => (reading: R) => (constraints: C) => O) =>
+    s(arity)(verbFn)(reading)(constraints)
+const get_arity = <A, V, R, C>(factType) => factType((a: A) => (_v: V) => (_r: R) => (_c: C) => a)
+const get_verb = <A, V, R, C>(factType) => factType((_a: A) => (v: V) => (_r: R) => (_c: C) => v)
+const get_reading = <A, V, R, C>(factType) => factType((_a: A) => (_v: V) => (r: R) => (_c: C) => r)
+const get_constraints = <A, V, R, C>(factType) => factType((_a: A) => (_v: V) => (_r: R) => (c: C) => c)
 // #endregion
 // #region Executable Facts
-
-const makeVerbFact = (FactType: FactTypeFn): any =>
+const makeVerbFact = (FactType) =>
   Θ(
-    (curry: any) => (args: any) => (n: any) =>
-      n === 0 ? get_verb(FactType)(args) : (arg: any) => curry(append(args)(cons(arg)(nil)))(n - 1),
+    (curry) => (args) => (n) =>
+      n === 0 ? get_verb(FactType)(args) : (arg) => curry(append(args)(cons(arg)(nil)))(n - 1),
   )(nil)(get_arity(FactType))
-
-type FactSymbolFn = (s: (verb: any, nouns: any) => any) => any
-
 const FactSymbol =
-  (verb: any) =>
-  (nouns: any): FactSymbolFn =>
-  (s) =>
-    s(verb, nouns)
-
-const get_verb_symbol = (f: FactSymbolFn): any => f((v, e) => v)
-const get_nouns = (f: FactSymbolFn): any => f((v, e) => e)
-
-// #endregion
-// #region Events with Readings (look up inverses externally)
-
-type EventFn = (s: (fact: any, time: any, readings: any) => any) => any
-
+  <V>(verb: V) =>
+  <N>(nouns: N) =>
+  <S>(s: (verb: V) => (nouns: N) => S) =>
+    s(verb)(nouns)
+const get_verb_symbol = <V, N>(f) => f((v: V) => (n: N) => v((a) => a))
+const get_nouns = <V, N>(f) => f((v: V) => (n: N) => n)
+type EventType<F, T, R> = <O>(selector: (fact: F) => (time: T) => (readings: R) => O) => O
 const Event =
-  (fact: any) =>
-  (time: any) =>
-  (readings: any): EventFn =>
-  (s) =>
-    s(fact, time, readings)
-
-const get_fact = (e: EventFn): any => e((f, t, r) => f)
-const get_time = (e: EventFn): any => e((f, t, r) => t)
-const get_event_readings = (e: EventFn): any => e((f, t, r) => r)
-
+  <F>(fact: F) =>
+  <T>(time: T) =>
+  <R>(readings: R): EventType<F, T, R> =>
+  <O>(selector: (fact: F) => (time: T) => (readings: R) => O): O =>
+    selector(fact)(time)(readings)
+const get_fact = <F, T, R>(e: EventType<F, T, R>): F => e((f: F) => (_t: T) => (_r: R) => f)
+const get_time = <F, T, R>(e: EventType<F, T, R>): T => e((_f: F) => (t: T) => (_r: R) => t)
+const get_event_readings = <F, T, R>(e: EventType<F, T, R>): R => e((_f: F) => (_t: T) => (r: R) => r)
 // #endregion
 // #region State Machine
-
 const unit_state =
-  (a: any) =>
-  (s: any): any =>
+  <K>(a: K) =>
+  <V>(s: V) =>
     pair(a)(s)
-
-const bind_state =
-  (m: any) =>
-  (f: any) =>
-  (s: any): any => {
-    const result = m(s)
-    return f(fst(result))(snd(result))
-  }
-
-const make_transition =
-  (guard: any) =>
-  (compute_next: any) =>
-  (state: any) =>
-  (input: any): any =>
-    IF(guard(state)(input))(compute_next(state)(input))(state)
-
-const unguarded = make_transition((_s: any) => (_i: any) => TRUE)
-
-type StateMachineFn = (s: (transition: any, initial: any) => any) => any
-
+const bind_state = (m) => (f) => (s) => ((result) => f(fst(result))(snd(result)))(m(s))
+const make_transition = (guard) => (compute_next) => (state) => (input) =>
+  IF(guard(state)(input))(compute_next(state)(input))(state)
+const unguarded = make_transition((_s) => (_i) => TRUE)
 const StateMachine =
-  (transition: any) =>
-  (initial: any): StateMachineFn =>
-  (s) =>
-    s(transition, initial)
-
-const run_machine =
-  (machine: StateMachineFn) =>
-  (stream: any): any =>
-    machine((transition: any, initial: any) =>
-      fold((event: any) => (state: any) => transition(state)(get_fact(event)))(initial)(stream),
-    )
-
+  <T>(transition: T) =>
+  <I>(initial: I) =>
+  <S>(s: (transition: T) => (initial: I) => S) =>
+    s(transition)(initial)
+const run_machine = (machine) => (stream) =>
+  machine((transition) => (initial) => fold((event) => (state) => transition(state)(get_fact(event)))(initial)(stream))
 // #endregion
 // #region Constraints & Violations
-
 const ALETHIC = 'alethic'
 const DEONTIC = 'deontic'
-
-type ConstraintFn = (s: (modality: any, predicate: any) => any) => any
-
+type Modality = typeof ALETHIC | typeof DEONTIC
+type ConstraintType<P> = <O>(selector: (modality: Modality) => (predicate: P) => O) => O
 const Constraint =
-  (modality: any) =>
-  (predicate: any): ConstraintFn =>
-  (s) =>
-    s(modality, predicate)
-
-const get_modality = (c: ConstraintFn): any => c((m, _) => m)
-const get_predicate = (c: ConstraintFn): any => c((_, p) => p)
-
-const evaluate_constraint =
-  (constraint: ConstraintFn) =>
-  (pop: any): any =>
-    get_predicate(constraint)(pop)
-
+  (modality: Modality) =>
+  <P>(predicate: P): ConstraintType<P> =>
+  <O>(selector: (modality: Modality) => (predicate: P) => O): O =>
+    selector(modality)(predicate)
+const get_modality = <P>(c: ConstraintType<P>): Modality => c((m: Modality) => (_p: P) => m)
+const get_predicate = <P>(c: ConstraintType<P>): P => c((_m: Modality) => (p: P) => p)
+const evaluate_constraint = (constraint) => (pop) => get_predicate(constraint)(pop)
 const evaluate_with_modality =
-  (constraint: ConstraintFn) =>
-  (pop: any): any =>
+  <C>(constraint: ConstraintType<C>) =>
+  <P>(pop: P) =>
     pair(get_modality(constraint))(evaluate_constraint(constraint)(pop))
-
-type ViolationFn = (s: (constraint: any, noun: any, reason: any) => any) => any
-
 const Violation =
-  (constraint: any) =>
-  (noun: any) =>
-  (reason: any): ViolationFn =>
-  (s) =>
-    s(constraint, noun, reason)
-
+  <C>(constraint: C) =>
+  <N>(noun: N) =>
+  <R>(reason: R) =>
+  <S>(s: (constraint: C) => (noun: N) => (reason: R) => S) =>
+    s(constraint)(noun)(reason)
 // #endregion
-// #region Meta-Fact Declarations
-
-const nounType = (name: any): FactSymbolFn => FactSymbol('nounType')(list(unit(name)))
-
-const factType = (verb: any, arity: any): FactSymbolFn => FactSymbol('factType')(list(unit(verb), unit(arity)))
-
-const role = (verb: any, index: any, name: any): FactSymbolFn =>
-  FactSymbol('role')(list(unit(verb), unit(index), unit(name)))
-
-const reading = (verb: any, parts: any): FactSymbolFn => FactSymbol('reading')(list(unit(verb), parts))
-
-const inverseReading = (primary: any, inverse: any, order: any, template: any): FactSymbolFn =>
-  FactSymbol('inverseReading')(list(unit(primary), unit(inverse), order, template))
-
-const constraint = (id: any, modality: any): FactSymbolFn => FactSymbol('constraint')(list(unit(id), unit(modality)))
-
-const constraintTarget = (constraintId: any, verb: any, roleIndex: any): FactSymbolFn =>
-  FactSymbol('constraintTarget')(list(unit(constraintId), unit(verb), unit(roleIndex)))
-
-const violation = (noun: any, constraintId: any, reason: any): FactSymbolFn =>
-  FactSymbol('violation')(list(unit(noun), unit(constraintId), unit(reason)))
-
+// #region System metamodel
+type FactSymbolType = <S>(s: (verb: unknown) => (nouns: unknown) => S) => S
+const nounType = (name: string): FactSymbolType => FactSymbol(unit('nounType'))(list(unit(name)))
+const factType = <V>(verb: V, arity: number): FactSymbolType =>
+  FactSymbol(unit('factType'))(list(unit(verb), unit(arity)))
+const role = <V>(verb: V, index: number, name: string): FactSymbolType =>
+  FactSymbol(unit('role'))(list(unit(verb), unit(index), unit(name)))
+const reading = <V>(verb: V, parts: string[]): FactSymbolType =>
+  FactSymbol(unit('reading'))(list(unit(verb), ...parts.map((p) => unit(p))))
+const inverseReading = <P, I, O, T = string[]>(primary: P, inverse: I, order: O, template: T) =>
+  FactSymbol(unit('inverseReading'))(list(unit(primary), unit(inverse), order, template))
+const constraint = <T>(id: T, modality: Modality) => FactSymbol(unit('constraint'))(list(unit(id), unit(modality)))
+const constraintTarget = <C, V>(constraintId: C, verb: V, roleIndex: number) =>
+  FactSymbol(unit('constraintTarget'))(list(unit(constraintId), unit(verb), unit(roleIndex)))
+const violation = <N, C, R>(noun: N, constraintId: C, reason: R) =>
+  FactSymbol(unit('violation'))(list(unit(noun), unit(constraintId), unit(reason)))
 // #endregion
 // #region Reserved Symbols
-
 // TODO: CSDP
 // The conceptual schema design procedure is an AI-assisted process to create an application schema that runs on top of this framework.
 // The AI gathers information from the user and uses it to create the schema.
@@ -347,29 +222,7 @@ const violation = (noun: any, constraintId: any, reason: any): FactSymbolFn =>
 // 6. Add value, set comparison and subtyping constraints
 // 7. Add other constraints and perform final checks
 const CSDP = Symbol('CSDP')
-
-// TODO: RMAP
-// The relational map function transforms the atomic facts into a relational schema.
-// This is useful for listing properties of an entity or otherwise defining a schema.
-// 0.1 Transform exclusive unaries; map unaries according to their open/closed world semantics.
-// 0.2 Temporarily erase all reference (preferred identification) predicates and treat compositely-identified object types as "black boxes".
-// 0.3 Indicate any absorbtion-overrides (separation or partition) for subtypes.
-// 0.4 Identify any derived fact types that must be stored.
-// 0.5 Indicate mapping choices for symmetric 1:1 cases.
-// 0.6 Consider replacing any disjunctive reference schemes by using an artificial or concatenated identifier or mandatory defaults.
-// 0.7 Indicate mapping choice where required for any objectified associations that have no spanning uniqueness constraint.
-// 1.  Map each fact type with a compound uniqueness constraint to a separate table
-// 2.1 Fact types with functional roles attached to the same object type grouped into the same table, keyed on the object type's identifier
-// 2.2 Map 1:1 cases to a single table, generally favoring fewer nulls
-// 3.  Map each independent object type with no functional roles to a separate table
-// 4.  Unpack each "black box column" into its component attributes
-// 5.1 Map subtype constraints on functional roles to qualified optional columns
-// 5.2 Map subtype constraints on nonfunctional roles to qualified subset constraints
-// 5.3 Map nonfunctional roles of independent object types to column sequences that reference the independent table
-const RMAP = Symbol('RMAP')
-
 // #endregion
-
 export {
   /**
    * The identity function.
@@ -592,10 +445,8 @@ export {
   violation,
   ALETHIC,
   DEONTIC,
-  RMAP,
   CSDP,
   type Truth,
   type Numeral,
-  type Pair,
-  type List,
+  type Modality,
 }

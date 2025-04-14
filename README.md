@@ -2,9 +2,9 @@
 
 [![Tests](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml/badge.svg)](https://github.com/graphdl/exec-symbols/actions/workflows/tests.yml)
 
-A **purely functional TypeScript library** for modeling facts, nouns, constraints, and state machines in JavaScript—using lambda-calculus–inspired Church encodings and composable building blocks.
+A **purely functional TypeScript library** for modeling facts, nouns, constraints, and state machines in JavaScript. Functional programming techniques are used for the backends at WhatsApp and X and spam filtering on Facebook, and enables parallelizable, deferred-by-default execution.
 
-This library showcases how to represent *boolean logic, pairs, lists, nouns, relationships, constraints, events, and more* all as functional closures. It may be used for rule engines or domain-specific language experiments.
+This library enables *knowledge graphs, object bindings, state machines, and inversion of control* all as functional closures. It can be used for rule engines, domain-specific language projects, and more.
 
 ---
 

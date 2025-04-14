@@ -59,7 +59,6 @@ import {
   get_verb,
   get_verb_symbol,
   inverseReading,
-  list,
   makeVerbFact,
   make_transition,
   map,
@@ -76,9 +75,7 @@ import {
   unit,
   unit_state,
   violation,
-  type List,
-  type Numeral,
-} from '../src/exec-symbols'
+} from '../src'
 
 const zero = ZERO
 const one = SUCC(zero)
@@ -112,7 +109,7 @@ describe('Lambda Calculus Primitives', () => {
 
   describe('IF', () => {
     it('should return the first argument when condition is TRUE', () => {
-      expect(IF<string>(TRUE)('then')('else')).toBe('then')
+      expect(IF(TRUE)('then')('else')).toBe('then')
     })
 
     it('should return the second argument when condition is FALSE', () => {
@@ -163,8 +160,8 @@ describe('Lambda Calculus Primitives', () => {
   describe('Church Lists and Pairs', () => {
     it('pair should create a pair that can be accessed with a function', () => {
       const p = pair(1)(2)
-      expect(p((a: number) => (b: number) => a)).toBe(1)
-      expect(p((a: number) => (b: number) => b)).toBe(2)
+      expect(p((a) => (b) => a)).toBe(1)
+      expect(p((a) => (b) => b)).toBe(2)
     })
 
     it('fst should extract the first element of a pair', () => {
@@ -178,22 +175,19 @@ describe('Lambda Calculus Primitives', () => {
     })
 
     it('nil should represent an empty list', () => {
-      // Create an empty list
+      // Create an empty list instance
       const emptyList = nil
 
       // Verify empty list
-      expect(IF(ISEMPTY(emptyList))('yes')('no')).toEqual('yes')
+      expect(ISEMPTY(emptyList)('yes')('no')).toEqual('yes')
     })
 
     it('cons should add an element to the start of a list', () => {
-      // Create an empty list
-      const emptyList = nil
-
       // Create a list with one element
-      const oneElementList = cons(zero)(emptyList)
+      const oneElementList = cons(zero)(nil)
 
       // Create a list with multiple elements using list instead of cons
-      const multiElementList: List = list(zero, one, two)
+      const multiElementList = cons(zero)(cons(one)(cons(two)(nil)))
 
       // Verify one element list
       expect(fst(oneElementList)).toEqual(zero)
@@ -203,7 +197,7 @@ describe('Lambda Calculus Primitives', () => {
       expect(fst(snd(multiElementList))).toEqual(one)
 
       // Test cons adds to the front by creating a new list
-      const newList: List = cons(eight)(multiElementList)
+      const newList = cons(eight)(multiElementList)
 
       // Original list should be unchanged
       expect(fst(multiElementList)).toEqual(zero)
@@ -217,16 +211,16 @@ describe('Lambda Calculus Primitives', () => {
     })
 
     it('fold should apply a function to each element of a list', () => {
-      const l = list(zero, one, two)
+      const l = cons(zero)(cons(one)(cons(two)(nil)))
       const sum = fold(ADD)(zero)(l)
       expect(EQ(sum)(three)('yes')('no')).toBe('yes')
     })
 
     it('map should transform each element of a list', () => {
-      const l = list(zero, one, two)
+      const l = cons(zero)(cons(one)(cons(two)(nil)))
 
       // Test a simpler transformation: increment by one
-      const incremented = map((x: Numeral) => SUCC(x))(l)
+      const incremented = map((x) => SUCC(x))(l)
 
       // Now test that: zero+1=one, one+1=two, two+1=three
       expect(EQ(fst(incremented))(one)('yes')('no')).toEqual('yes')
@@ -235,13 +229,13 @@ describe('Lambda Calculus Primitives', () => {
     })
 
     it('append should join two lists', () => {
-      const list1 = list(zero, one)
-      const list2 = list(two, three)
+      const list1 = cons(zero)(cons(one)(nil))
+      const list2 = cons(two)(cons(three)(nil))
       const joined = append(list1)(list2)
       expect(fst(joined)).toEqual(zero)
       expect(fst(snd(joined))).toEqual(one)
-      expect(fst<Numeral>(snd(snd(joined)))).toEqual(two)
-      expect(fst<Numeral>(snd(snd(snd(joined))))).toEqual(three)
+      expect(fst(snd(snd(joined)))).toEqual(two)
+      expect(fst(snd(snd(snd(joined))))).toEqual(three)
     })
   })
 
@@ -258,7 +252,7 @@ describe('Lambda Calculus Primitives', () => {
       expect(result).toBe(5)
 
       // We can also test that it equals a function that returns the identity function
-      expect(EQ(ZERO)((a: any) => Identity)('yes')('no')).toBe('yes')
+      expect(EQ(ZERO)(() => Identity)('yes')('no')).toBe('yes')
     })
 
     it('UINT should convert JavaScript numbers to Church numerals', () => {
@@ -419,7 +413,7 @@ describe('Nouns', () => {
 
   describe('Utility functions', () => {
     it('nth should return the nth element of a list', () => {
-      const l = list(zero, one, two)
+      const l = cons(zero)(cons(one)(cons(two)(nil)))
       expect(EQ(nth(zero)(l))(zero)('yes')('no')).toBe('yes')
       expect(EQ(nth(one)(l))(one)('yes')('no')).toBe('yes')
       expect(EQ(nth(two)(l))(two)('yes')('no')).toBe('yes')
@@ -432,8 +426,8 @@ describe('Relationships and Facts', () => {
     it('should create a relationship type with arity, verb function, reading, and constraints', () => {
       // 1. Create test values
       const testArity = 2
-      const testVerbFn = (args: any) => FactSymbol('loves')(args)
-      const testReading = 'X loves Y'
+      const testVerbFn = (args) => FactSymbol(unit('loves'))(args)
+      const testReading = ['', ' loves ', '']
       const testConstraints = nil
 
       // 2. Create the FactType
@@ -467,7 +461,7 @@ describe('Relationships and Facts', () => {
 
   describe('makeVerbFact', () => {
     it('should create a curried function to build facts', () => {
-      const verbFn = (args: any) => FactSymbol('loves')(args)
+      const verbFn = (args) => FactSymbol(unit('loves'))(args)
       const reading = ['', ' loves ', '']
       const constraints = nil
 
@@ -494,9 +488,9 @@ describe('Relationships and Facts', () => {
     it('should create a symbolic fact with verb and nouns', () => {
       const alice = unit('Alice')
       const bob = unit('Bob')
-      const nouns = list(alice, bob)
+      const nouns = cons(alice)(cons(bob)(nil))
 
-      const fact = FactSymbol('loves')(nouns)
+      const fact = FactSymbol(unit('loves'))(nouns)
 
       expect(get_verb_symbol(fact)).toBe('loves')
       expect(get_nouns(fact)).toBe(nouns)
@@ -511,10 +505,10 @@ describe('Relationships and Facts', () => {
 describe('Readings', () => {
   it('should create and access reading properties', () => {
     const verb = FactSymbol('loves')
-    const order = list(zero, one)
+    const order = cons(zero)(cons(one)(nil))
     const template = ['', ' loves ', '']
 
-    const reading = Reading(verb, order, template)
+    const reading = Reading(verb)(order)(template)
 
     expect(get_reading_verb(reading)).toBe(verb)
     expect(get_reading_order(reading)).toBe(order)
@@ -526,11 +520,11 @@ describe('Events', () => {
   it('should create and access event properties', () => {
     const alice = unit('Alice')
     const bob = unit('Bob')
-    const nouns = list(alice, bob)
+    const nouns = cons(alice)(cons(bob)(nil))
 
     const fact = FactSymbol('loves')(nouns)
     const time = 'yesterday'
-    const readings = list('Alice loves Bob')
+    const readings = cons('Alice loves Bob')(nil)
 
     const event = Event(fact)(time)(readings)
 
@@ -549,9 +543,9 @@ describe('State Machines', () => {
     })
 
     it('bind_state should compose state transformations', () => {
-      const state = bind_state((s: any) => unit_state(s.length)(s))((n: any) => (s: any) => unit_state(n * 2)(s + '!'))(
-        'test',
-      )
+      const state = bind_state((s: string) => unit_state(s.length)(s))(
+        (n: number) => (s: string) => unit_state(n * 2)(s + '!'),
+      )('test')
 
       expect(fst(state)).toBe(8) // 'test' length is 4, doubled is 8
       expect(snd(state)).toBe('test!')
@@ -560,8 +554,8 @@ describe('State Machines', () => {
 
   describe('Transitions', () => {
     it('should create transitions with guards', () => {
-      const guard = (state: any) => (input: any) => equals(input)(unit('valid'))
-      const compute_next = (state: any) => (input: any) => 'next-state'
+      const guard = () => (input) => equals(input)(unit('valid'))
+      const compute_next = () => () => 'next-state'
 
       const transition = make_transition(guard)(compute_next)
 
@@ -570,7 +564,7 @@ describe('State Machines', () => {
     })
 
     it('unguarded should create a transition without a guard', () => {
-      const compute_next = (state: any) => (input: any) => 'next-state'
+      const compute_next = () => () => 'next-state'
 
       const transition = unguarded(compute_next)
 
@@ -582,7 +576,7 @@ describe('State Machines', () => {
     it('should create and run a state machine', () => {
       // Define a simple counter state machine
       const initialState = 0
-      const transition = unguarded((state: any) => (input: any) => {
+      const transition = unguarded((state) => (input) => {
         if (get_verb_symbol(input) === 'inc') return state + 1
         if (get_verb_symbol(input) === 'dec') return state - 1
         return state
@@ -591,12 +585,12 @@ describe('State Machines', () => {
       const counterMachine = StateMachine(transition)(initialState)
 
       // Create events
-      const incEvent1 = Event(FactSymbol('inc')(nil))('t1')(nil)
-      const incEvent2 = Event(FactSymbol('inc')(nil))('t2')(nil)
-      const decEvent = Event(FactSymbol('dec')(nil))('t3')(nil)
+      const incEvent1 = Event(FactSymbol(unit('inc'))(nil))('t1')(nil)
+      const incEvent2 = Event(FactSymbol(unit('inc'))(nil))('t2')(nil)
+      const decEvent = Event(FactSymbol(unit('dec'))(nil))('t3')(nil)
 
       // Create event stream
-      const eventStream = list(incEvent1, incEvent2, decEvent)
+      const eventStream = cons(incEvent1)(cons(incEvent2)(cons(decEvent)(nil)))
 
       // Run machine
       const finalState = run_machine(counterMachine)(eventStream)
@@ -609,7 +603,7 @@ describe('Constraints and Violations', () => {
   describe('Constraint creation and evaluation', () => {
     it('should create a constraint with modality and predicate', () => {
       const modality = ALETHIC
-      const predicate = (pop: any) => true
+      const predicate = () => true
 
       const constraint = Constraint(modality)(predicate)
 
@@ -618,16 +612,16 @@ describe('Constraints and Violations', () => {
     })
 
     it('should evaluate constraints against a population', () => {
-      const alwaysTrue = Constraint(ALETHIC)((pop: any) => true)
-      const alwaysFalse = Constraint(DEONTIC)((pop: any) => false)
+      const alwaysTrue = Constraint(ALETHIC)(() => true)
+      const alwaysFalse = Constraint(DEONTIC)(() => false)
 
       expect(evaluate_constraint(alwaysTrue)('population')).toBe(true)
       expect(evaluate_constraint(alwaysFalse)('population')).toBe(false)
     })
 
     it('should evaluate constraints with modality', () => {
-      const alwaysTrue = Constraint(ALETHIC)((pop: any) => true)
-      const alwaysFalse = Constraint(DEONTIC)((pop: any) => false)
+      const alwaysTrue = Constraint(ALETHIC)(() => true)
+      const alwaysFalse = Constraint(DEONTIC)(() => false)
 
       const resultTrue = evaluate_with_modality(alwaysTrue)('population')
       const resultFalse = evaluate_with_modality(alwaysFalse)('population')
@@ -642,16 +636,16 @@ describe('Constraints and Violations', () => {
 
   describe('Violations', () => {
     it('should create a violation with constraint, noun, and reason', () => {
-      const constraint = Constraint(DEONTIC)((pop: any) => false)
+      const constraint = Constraint(DEONTIC)(() => false)
       const noun = unit('Alice')
-      const reason = 'Violated rule'
+      const reason = unit('Violated rule')
 
       const violation = Violation(constraint)(noun)(reason)
 
       // We need to provide a selector to extract data
-      expect(violation((c: any, e: any, r: any) => c)).toBe(constraint)
-      expect(violation((c: any, e: any, r: any) => e)).toBe(noun)
-      expect(violation((c: any, e: any, r: any) => r)).toBe(reason)
+      expect(violation((c) => (_e) => (_r) => c)).toBe(constraint)
+      expect(violation((_c) => (e) => (_r) => e)).toBe(noun)
+      expect(violation((_c) => (_e) => (r) => r)).toBe(reason)
     })
   })
 })
@@ -686,7 +680,7 @@ describe('Meta-Fact Declarations', () => {
   })
 
   it('inverseReading should create an inverse reading declaration', () => {
-    const fact = inverseReading('loves', 'is_loved_by', list(1, 0), ['', ' is loved by ', ''])
+    const fact = inverseReading('loves', 'is_loved_by', cons(1)(cons(0)(nil)), ['', ' is loved by ', ''])
     expect(get_verb_symbol(fact)).toBe('inverseReading')
     expect(get_id(fst(get_nouns(fact)))).toBe('loves')
     expect(get_id(nth(one)(get_nouns(fact)))).toBe('is_loved_by')
@@ -726,7 +720,6 @@ describe('Constants', () => {
   describe('Reserved Symbols', () => {
     it('should have the reserved symbols defined', () => {
       expect(typeof CSDP).toBe('symbol')
-      expect(typeof RMAP).toBe('symbol')
     })
   })
 })
@@ -738,13 +731,13 @@ describe('Utility Functions', () => {
       const alice = unit('Alice')
       const bob = unit('Bob')
       const charlie = unit('Charlie')
-      const nouns = list(alice, bob, charlie)
+      const nouns = cons(alice)(cons(bob)(cons(charlie)(nil)))
 
       // Create an order list to rearrange: [2, 0, 1] (charlie, alice, bob)
-      const order = list(two, zero, one)
+      const order = cons(two)(cons(zero)(cons(one)(nil)))
 
       // Apply reorder
-      const reordered = reorder(nouns, order)
+      const reordered = reorder(nouns)(order)
 
       // Check that the order is now [charlie, alice, bob]
       expect(get_id(nth(zero)(reordered))).toBe('Charlie')
@@ -761,8 +754,8 @@ describe('Reading Templates', () => {
 
     // Create a reading with a verb and order
     const verbSymbol = 'loves'
-    const order = list(zero, one)
-    const readingObj = Reading(verbSymbol, order, template)
+    const order = cons(zero)(cons(one)(nil))
+    const readingObj = Reading(verbSymbol)(order)(template)
 
     // Check the template was stored correctly
     expect(get_reading_template(readingObj)).toBe(template)
@@ -776,9 +769,9 @@ describe('Reading Templates', () => {
 
     // Create a reading with a verb and order (e.g., "sender sent message to recipient on date")
     const verbSymbol = 'sent'
-    const order = list(zero, one, two, three)
+    const order = cons(zero)(cons(one)(cons(two)(cons(three)(nil))))
 
-    const readingObj = Reading(verbSymbol, order, template)
+    const readingObj = Reading(verbSymbol)(order)(template)
 
     expect(get_reading_template(readingObj)).toBe(template)
     expect(get_reading_verb(readingObj)).toBe(verbSymbol)
@@ -791,7 +784,7 @@ describe('Inverse Reading Functionality', () => {
     const primary = 'loves'
     const inverse = 'is_loved_by'
     // Reverse the order from [0,1] to [1,0]
-    const order = list(one, zero)
+    const order = cons(one)(cons(zero)(nil))
     const template = ['', ' is loved by ', '']
 
     const invReading = inverseReading(primary, inverse, order, template)
@@ -815,7 +808,7 @@ describe('Inverse Reading Functionality', () => {
     const primary = 'enrolled_in'
     const inverse = 'has_enrolled'
     // Swap student and course: [0,1] -> [1,0]
-    const order = list(one, zero)
+    const order = cons(one)(cons(zero)(nil))
     const template = ['', ' has ', ' enrolled']
 
     const invReading = inverseReading(primary, inverse, order, template)

@@ -1,4 +1,25 @@
-import { execSymbolsAdapter, wrapTrackedService } from './bridge'
+import {
+  BaseHandlerParams,
+  createAIFunctions,
+  createAPI,
+  createAction,
+  createAgent,
+  createDatabase,
+  createEventTracker,
+  createSearch,
+  createTrigger,
+  createWorkflow,
+  execSymbolsAdapter,
+  wrapTrackedService,
+  // New public API functions
+  AI,
+  FunctionsAI,
+  Agent,
+  DB,
+  API,
+  track,
+  type WorkflowHandler,
+} from './bridge'
 import {
   ADD,
   ALETHIC,
@@ -19,7 +40,6 @@ import {
   Identity,
   LE,
   LT,
-  List,
   MULT,
   NOT,
   NULL,
@@ -27,8 +47,6 @@ import {
   Numeral,
   OR,
   PRED,
-  Pair,
-  RMAP,
   Reading,
   SUCC,
   StateMachine,
@@ -82,7 +100,10 @@ import {
   unit,
   unit_state,
   violation,
+  type Modality,
 } from './exec-symbols'
+import { RMAP, createRMapPipeline } from './rmap'
+import { serialize, toJSON as serializeToJSON, fromJSON } from './serialization'
 
 export {
   ADD,
@@ -124,6 +145,15 @@ export {
   cons,
   constraint,
   constraintTarget,
+  createAIFunctions,
+  createAPI,
+  createAction,
+  createAgent,
+  createDatabase,
+  createEventTracker,
+  createSearch,
+  createTrigger,
+  createWorkflow,
   equals,
   evaluate_constraint,
   evaluate_with_modality,
@@ -165,9 +195,22 @@ export {
   unit_state,
   violation,
   wrapTrackedService,
-  type List,
+  // Export public API functions
+  AI,
+  FunctionsAI,
+  Agent,
+  DB,
+  API,
+  track,
+  // Export serialization utilities
+  createRMapPipeline,
+  serialize,
+  serializeToJSON,
+  fromJSON,
+  // Export types
+  type BaseHandlerParams,
+  type Modality,
   type Numeral,
-  type Pair,
-  type Truth
+  type Truth,
+  type WorkflowHandler,
 }
-
