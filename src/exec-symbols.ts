@@ -47,7 +47,10 @@ const cons =
   <O>(selector: (head: H) => (tail: T) => O) =>
     selector(head)(tail)
 const list = (...args: unknown[]) => args.reduceRight((acc, item) => cons(item)(acc), nil)
-const U = (le) => (x) => le((y) => x(x)(y))
+const U =
+  <L>(le: L) =>
+  <X>(x: X) =>
+    le(<Y>(y: Y) => x(x)(y))
 const Θ = <T, V>(le: (a: (m: T) => V) => (m: T) => V) => U(le)(U(le))
 type List<T> = <R>(selector: <A>(isEmpty: R) => <B>(cons: (head: T) => (tail: List<T>) => R) => R) => R
 const fold = Θ(
@@ -57,20 +60,36 @@ const fold = Θ(
     (list: List<T>) =>
       IF(ISEMPTY(list))(acc)(list((head: T) => (tail: List<T>) => f(head)(recFold(f)(acc)(tail)))),
 )
-const map = (f) => (list) => fold((x) => (acc) => cons(f(x))(acc))(nil)(list)
+const map =
+  <F>(f: F) =>
+  <L>(list: L) =>
+    fold(
+      <X>(x: X) =>
+        <A>(acc: A) =>
+          cons(f(x))(acc),
+    )(nil)(list)
 const append =
   <A>(l1: A) =>
   <B>(l2: B) =>
     fold(cons)(l2)(l1)
-const nth = (n: Numeral) => (list) =>
-  Θ(
-    (recNth) => (targetN) => (currentList) => (currentIndex) =>
-      IF(ISEMPTY(currentList))(nil)(
-        IF(EQ(currentIndex)(targetN))(currentList((h) => () => h))(
-          currentList((h) => (t) => recNth(targetN)(t)(SUCC(currentIndex))),
-        ),
-      ),
-  )(n)(list)(ZERO)
+const nth =
+  (n: Numeral) =>
+  <L>(list: L) =>
+    Θ(
+      <R>(recNth: R) =>
+        <N>(targetN: N) =>
+        <L>(currentList: List<L>) =>
+        (currentIndex: Numeral) =>
+          IF(ISEMPTY(currentList))(nil)(
+            IF(EQ(currentIndex)(targetN))(currentList((h) => () => h))(
+              currentList(
+                <H>(_h: H) =>
+                  <T>(t: T) =>
+                    recNth(targetN)(t)(SUCC(currentIndex)),
+              ),
+            ),
+          ),
+    )(n)(list)(ZERO)
 const reorder =
   <N>(nouns: N) =>
   <O>(order: O) =>
@@ -116,6 +135,7 @@ const Reading =
 const get_reading_verb = <V, O, T>(r: ReadingType<V, O, T>): V => r((v: V) => (_o: O) => (_t: T) => v)
 const get_reading_order = <V, O, T>(r: ReadingType<V, O, T>): O => r((_v: V) => (o: O) => (_t: T) => o)
 const get_reading_template = <V, O, T>(r: ReadingType<V, O, T>): T => r((_v: V) => (_o: O) => (t: T) => t)
+type FactTypeFn<A, V, R, C> = <T>(selector: (a: A) => (v: V) => (r: R) => (c: C) => T) => T
 const FactType =
   <A>(arity: A) =>
   <V>(verbFn: V) =>
@@ -123,24 +143,38 @@ const FactType =
   <C>(constraints: C) =>
   <O>(s: (arity: A) => (verbFn: V) => (reading: R) => (constraints: C) => O) =>
     s(arity)(verbFn)(reading)(constraints)
-const get_arity = <A, V, R, C>(factType) => factType((a: A) => (_v: V) => (_r: R) => (_c: C) => a)
-const get_verb = <A, V, R, C>(factType) => factType((_a: A) => (v: V) => (_r: R) => (_c: C) => v)
-const get_reading = <A, V, R, C>(factType) => factType((_a: A) => (_v: V) => (r: R) => (_c: C) => r)
-const get_constraints = <A, V, R, C>(factType) => factType((_a: A) => (_v: V) => (_r: R) => (c: C) => c)
+const get_arity = <A, V, R, C>(factType: FactTypeFn<A, V, R, C>) =>
+  factType((a: A) => (_v: V) => (_r: R) => (_c: C) => a)
+const get_verb = <A, V, R, C>(factType: FactTypeFn<A, V, R, C>) =>
+  factType((_a: A) => (v: V) => (_r: R) => (_c: C) => v)
+const get_reading = <A, V, R, C>(factType: FactTypeFn<A, V, R, C>) =>
+  factType((_a: A) => (_v: V) => (r: R) => (_c: C) => r)
+const get_constraints = <A, V, R, C>(factType: FactTypeFn<A, V, R, C>) =>
+  factType((_a: A) => (_v: V) => (_r: R) => (c: C) => c)
 // #endregion
 // #region Executable Facts
-const makeVerbFact = (FactType) =>
+const makeVerbFact = <A, V, R, C>(FactType: FactTypeFn<A, V, R, C>) =>
   Θ(
-    (curry) => (args) => (n) =>
-      n === 0 ? get_verb(FactType)(args) : (arg) => curry(append(args)(cons(arg)(nil)))(n - 1),
+    (curry) => (args) => (n: number) =>
+      n === 0 ? get_verb(FactType)(args) : <A>(arg: A) => curry(append(args)(cons(arg)(nil)))(n - 1),
   )(nil)(get_arity(FactType))
 const FactSymbol =
   <V>(verb: V) =>
   <N>(nouns: N) =>
   <S>(s: (verb: V) => (nouns: N) => S) =>
     s(verb)(nouns)
-const get_verb_symbol = <V, N>(f) => f((v: V) => (n: N) => v((a) => a))
-const get_nouns = <V, N>(f) => f((v: V) => (n: N) => n)
+const get_verb_symbol = (f) =>
+  f(
+    <V>(v: V) =>
+      <N>(_n: N) =>
+        v((a: unknown) => a),
+  )
+const get_nouns = (f) =>
+  f(
+    <V>(_v: V) =>
+      <N>(n: N) =>
+        n,
+  )
 type EventType<F, T, R> = <O>(selector: (fact: F) => (time: T) => (readings: R) => O) => O
 const Event =
   <F>(fact: F) =>
@@ -157,17 +191,39 @@ const unit_state =
   <K>(a: K) =>
   <V>(s: V) =>
     pair(a)(s)
-const bind_state = (m) => (f) => (s) => ((result) => f(fst(result))(snd(result)))(m(s))
-const make_transition = (guard) => (compute_next) => (state) => (input) =>
-  IF(guard(state)(input))(compute_next(state)(input))(state)
-const unguarded = make_transition((_s) => (_i) => TRUE)
+const bind_state =
+  <A, B, S>(m: (state: S) => Pair<A, S>) =>
+  (f: (value: A) => (state: S) => Pair<B, S>) =>
+  (s: S): Pair<B, S> =>
+    ((result) => f(fst(result))(snd(result)))(m(s))
+const make_transition =
+  <G>(guard: G) =>
+  <C>(compute_next: C) =>
+  <S>(state: S) =>
+  <I>(input: I) =>
+    IF(guard(state)(input))(compute_next(state)(input))(state)
+const unguarded = make_transition(
+  <S>(_s: S) =>
+    <I>(_i: I) =>
+      TRUE,
+)
 const StateMachine =
   <T>(transition: T) =>
   <I>(initial: I) =>
   <S>(s: (transition: T) => (initial: I) => S) =>
     s(transition)(initial)
-const run_machine = (machine) => (stream) =>
-  machine((transition) => (initial) => fold((event) => (state) => transition(state)(get_fact(event)))(initial)(stream))
+const run_machine =
+  <M>(machine: M) =>
+  <S>(stream: S) =>
+    machine(
+      <T>(transition: T) =>
+        <I>(initial: I) =>
+          fold(
+            <E>(event: E) =>
+              <W>(state: W) =>
+                transition(state)(get_fact(event)),
+          )(initial)(stream),
+    )
 // #endregion
 // #region Constraints & Violations
 const ALETHIC = 'alethic'
@@ -181,7 +237,10 @@ const Constraint =
     selector(modality)(predicate)
 const get_modality = <P>(c: ConstraintType<P>): Modality => c((m: Modality) => (_p: P) => m)
 const get_predicate = <P>(c: ConstraintType<P>): P => c((_m: Modality) => (p: P) => p)
-const evaluate_constraint = (constraint) => (pop) => get_predicate(constraint)(pop)
+const evaluate_constraint =
+  <C>(constraint: ConstraintType<C>) =>
+  <P>(pop: P) =>
+    get_predicate(constraint)(pop)
 const evaluate_with_modality =
   <C>(constraint: ConstraintType<C>) =>
   <P>(pop: P) =>
