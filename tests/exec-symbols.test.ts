@@ -23,7 +23,6 @@ import {
   NOT,
   Noun,
   OR,
-  RMAP,
   Reading,
   SUCC,
   StateMachine,

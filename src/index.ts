@@ -1,5 +1,10 @@
 import {
+  AI,
+  API,
+  Agent,
   BaseHandlerParams,
+  DB,
+  FunctionsAI,
   createAIFunctions,
   createAPI,
   createAction,
@@ -10,14 +15,8 @@ import {
   createTrigger,
   createWorkflow,
   execSymbolsAdapter,
-  wrapTrackedService,
-  // New public API functions
-  AI,
-  FunctionsAI,
-  Agent,
-  DB,
-  API,
   track,
+  wrapTrackedService,
   type WorkflowHandler,
 } from './bridge'
 import {
@@ -103,14 +102,18 @@ import {
   type Modality,
 } from './exec-symbols'
 import { RMAP, createRMapPipeline } from './rmap'
-import { serialize, toJSON as serializeToJSON, fromJSON } from './serialization'
+import { fromJSON, serialize, toJSON as serializeToJSON } from './serialization'
 
 export {
   ADD,
+  AI,
   ALETHIC,
   AND,
+  API,
+  Agent,
   CSDP,
   Constraint,
+  DB,
   DEONTIC,
   EQ,
   EXP,
@@ -118,6 +121,7 @@ export {
   FALSE,
   FactSymbol,
   FactType,
+  FunctionsAI,
   GE,
   GT,
   IF,
@@ -151,6 +155,7 @@ export {
   createAgent,
   createDatabase,
   createEventTracker,
+  createRMapPipeline,
   createSearch,
   createTrigger,
   createWorkflow,
@@ -160,6 +165,7 @@ export {
   execSymbolsAdapter,
   factType,
   fold,
+  fromJSON,
   fst,
   get_arity,
   get_constraints,
@@ -189,25 +195,15 @@ export {
   reorder,
   role,
   run_machine,
+  serialize,
+  serializeToJSON,
   snd,
+  track,
   unguarded,
   unit,
   unit_state,
   violation,
   wrapTrackedService,
-  // Export public API functions
-  AI,
-  FunctionsAI,
-  Agent,
-  DB,
-  API,
-  track,
-  // Export serialization utilities
-  createRMapPipeline,
-  serialize,
-  serializeToJSON,
-  fromJSON,
-  // Export types
   type BaseHandlerParams,
   type Modality,
   type Numeral,

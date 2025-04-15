@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ALETHIC,
+  Constraint,
+  Event,
   FactSymbol,
   FactType,
   Reading,
-  Constraint,
-  ALETHIC,
-  UINT,
   TRUE,
+  UINT,
+  fromJSON,
   list,
   makeVerbFact,
-  unit,
-  Event,
   serialize,
   serializeToJSON,
-  fromJSON
+  unit,
 } from '../src'
 
 describe('Serialization', () => {
@@ -33,40 +33,40 @@ describe('Serialization', () => {
 
     // Create the fact
     const fact = loves(alice)(bob)
-    
+
     // Serialize the fact
-    const serialized = serialize(fact) as { 
-      type: string; 
-      verb_symbol: string; 
+    const serialized = serialize(fact) as {
+      type: string
+      verb_symbol: string
       nouns: unknown[]
     }
-    
+
     // Verify serialized structure
     expect(serialized).toHaveProperty('type', 'FactSymbol')
     expect(serialized).toHaveProperty('verb_symbol', 'loves')
     expect(serialized).toHaveProperty('nouns')
-    
+
     const nouns = serialized.nouns
     expect(nouns).toContain('Alice')
     expect(nouns).toContain('Bob')
     expect(nouns.length).toBe(2)
   })
-  
+
   it('should serialize Constraint', () => {
     const uniqueConstraint = Constraint(ALETHIC)(() => TRUE)
-    
+
     // Serialize the constraint
     const serialized = serialize(uniqueConstraint) as {
-      type: string;
-      modality: string;
-      predicate: unknown;
+      type: string
+      modality: string
+      predicate: unknown
     }
-    
+
     // Verify serialized structure
     expect(serialized).toHaveProperty('type', 'Constraint')
     expect(serialized).toHaveProperty('modality', 'alethic')
   })
-  
+
   it('should convert to and from JSON', () => {
     // Define a simple fact
     const verbFn = (args) => FactSymbol(unit('created'))(args)
@@ -74,24 +74,24 @@ describe('Serialization', () => {
     const constraints = unit(null)
     const createdFactType = FactType(2)(verbFn)(reading)(constraints)
     const created = makeVerbFact(createdFactType)
-    
+
     // Create nouns
     const user = unit('User123')
     const document = unit('Document456')
-    
+
     // Create the fact and wrap in an event
     const createdFact = created(user)(document)
     const now = new Date().toISOString()
     const event = Event(createdFact)(unit(now))(unit(null))
-    
+
     // Convert to JSON string and back
     const serialized = serialize(event)
     console.log('Serialized event:', serialized)
-    
+
     const jsonString = serializeToJSON(event)
     const parsed = fromJSON(jsonString)
     console.log('Parsed result:', parsed)
-    
+
     // Just verify that serialization and deserialization works
     // for some fundamental properties
     expect(parsed).toBeDefined()
@@ -99,4 +99,4 @@ describe('Serialization', () => {
     expect(typeof jsonString).toBe('string')
     expect(jsonString.length).toBeGreaterThan(10)
   })
-}) 
+})

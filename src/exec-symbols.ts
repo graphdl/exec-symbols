@@ -284,36 +284,14 @@ const CSDP = Symbol('CSDP')
 // #endregion
 export {
   /**
-   * The identity function.
-   * @param n - The value to return.
+   * The addition function.
+   * Returns the sum of the two parameters.
+   * @param m - The first value.
+   * @param n - The second value.
    * @returns The value.
    */
-  Identity,
-  /**
-   * The true function.
-   * Returns the first parameter.
-   * @param trueCase - The value to return if the condition is true.
-   * @param falseCase - The value to return if the condition is false.
-   * @returns The value.
-   */
-  TRUE,
-  /**
-   * The false function.
-   * Returns the second parameter. (equivalent ZERO)
-   * @param trueCase - The value to return if the condition is true.
-   * @param falseCase - The value to return if the condition is false.
-   * @returns The value.
-   */
-  FALSE,
-  /**
-   * The if function.
-   * Returns the first parameter if the condition is true, otherwise the second parameter.
-   * @param condition - The condition to check.
-   * @param trueCase - The value to return if the condition is true.
-   * @param falseCase - The value to return if the condition is false.
-   * @returns The value.
-   */
-  IF,
+  ADD,
+  ALETHIC,
   /**
    * The and function.
    * Returns true if both parameters are true.
@@ -322,89 +300,15 @@ export {
    * @returns The value.
    */
   AND,
-  /**
-   * The or function.
-   * Returns true if either parameter is true.
-   * @param p - The first value.
-   * @param q - The second value.
-   * @returns The value.
-   */
-  OR,
-  /**
-   * The not function.
-   * Negates the parameter.
-   * @param p - The value to negate.
-   * @returns The value.
-   */
-  NOT,
-  /**
-   * The pair function.
-   * Returns a pair of the two parameters.
-   * @param a - The first value.
-   * @param b - The second value.
-   * @returns The value.
-   */
-  pair,
-  /**
-   * Returns the first value of the pair.
-   * @param p - The pair.
-   * @returns The value.
-   */
-  fst,
-  /**
-   * Returns the second value of the pair.
-   * @param p - The pair.
-   * @returns The value.
-   */
-  snd,
-  nil,
-  NULL,
-  ISEMPTY,
-  cons,
-  list,
-  map,
-  fold,
   append,
-  PRED,
-  UINT,
-  /**
-   * The zero function.
-   * Returns the identity function as a constant. (equivalent to FALSE)
-   * @param a - The function to apply to the pair.
-   * @returns The value.
-   */
-  ZERO,
-  /**
-   * The successor function.
-   * Returns the successor of the parameter.
-   * @param n - The value of which to get the successor.
-   * @returns The value.
-   */
-  SUCC,
-  /**
-   * The addition function.
-   * Returns the sum of the two parameters.
-   * @param m - The first value.
-   * @param n - The second value.
-   * @returns The value.
-   */
-  ADD,
-  /**
-   * The multiplication function.
-   * Returns the product of the two parameters.
-   * @param m - The first value.
-   * @param n - The second value.
-   * @returns The value.
-   */
-  MULT,
-  /**
-   * The exponentiation function.
-   * Returns the first parameter raised to the power of the second parameter.
-   * @param m - The base.
-   * @param n - The exponent.
-   * @returns The value.
-   */
-  EXP,
+  bind,
+  bind_state,
+  cons,
+  Constraint,
+  constraint,
+  constraintTarget,
+  CSDP,
+  DEONTIC,
   /**
    * The equality function.
    * Returns true if the two parameters are equal.
@@ -414,13 +318,65 @@ export {
    */
   EQ,
   /**
-   * The less than function.
-   * Returns true if the first parameter is less than the second parameter.
+   * The equals function.
+   * Returns true if two references are to the same object.
+   * @param a - The first value.
+   * @param b - The second value.
+   * @returns The value.
+   */
+  equals,
+  evaluate_constraint,
+  evaluate_with_modality,
+  Event,
+  /**
+   * The exponentiation function.
+   * Returns the first parameter raised to the power of the second parameter.
+   * @param m - The base.
+   * @param n - The exponent.
+   * @returns The value.
+   */
+  EXP,
+  FactSymbol,
+  FactType,
+  factType,
+  /**
+   * The false function.
+   * Returns the second parameter. (equivalent ZERO)
+   * @param trueCase - The value to return if the condition is true.
+   * @param falseCase - The value to return if the condition is false.
+   * @returns The value.
+   */
+  FALSE,
+  fold,
+  /**
+   * Returns the first value of the pair.
+   * @param p - The pair.
+   * @returns The value.
+   */
+  fst,
+  /**
+   * The greater than or equal to function.
+   * Returns true if the first parameter is greater than or equal to the second parameter.
    * @param m - The first value.
    * @param n - The second value.
    * @returns The value.
    */
-  LT,
+  GE,
+  get_arity,
+  get_constraints,
+  get_event_readings,
+  get_fact,
+  get_id,
+  get_modality,
+  get_nouns,
+  get_predicate,
+  get_reading,
+  get_reading_order,
+  get_reading_template,
+  get_reading_verb,
+  get_time,
+  get_verb,
+  get_verb_symbol,
   /**
    * The greater than function.
    * Returns true if the first parameter is greater than the second parameter.
@@ -430,6 +386,23 @@ export {
    */
   GT,
   /**
+   * The identity function.
+   * @param n - The value to return.
+   * @returns The value.
+   */
+  Identity,
+  /**
+   * The if function.
+   * Returns the first parameter if the condition is true, otherwise the second parameter.
+   * @param condition - The condition to check.
+   * @param trueCase - The value to return if the condition is true.
+   * @param falseCase - The value to return if the condition is false.
+   * @returns The value.
+   */
+  IF,
+  inverseReading,
+  ISEMPTY,
+  /**
    * The less than or equal to function.
    * Returns true if the first parameter is less than or equal to the second parameter.
    * @param m - The first value.
@@ -437,26 +410,36 @@ export {
    * @returns The value.
    */
   LE,
+  list,
   /**
-   * The greater than or equal to function.
-   * Returns true if the first parameter is greater than or equal to the second parameter.
+   * The less than function.
+   * Returns true if the first parameter is less than the second parameter.
    * @param m - The first value.
    * @param n - The second value.
    * @returns The value.
    */
-  GE,
-  Noun,
-  unit,
-  bind,
-  get_id,
+  LT,
+  make_transition,
+  makeVerbFact,
+  map,
   /**
-   * The equals function.
-   * Returns true if two references are to the same object.
-   * @param a - The first value.
-   * @param b - The second value.
+   * The multiplication function.
+   * Returns the product of the two parameters.
+   * @param m - The first value.
+   * @param n - The second value.
    * @returns The value.
    */
-  equals,
+  MULT,
+  nil,
+  /**
+   * The not function.
+   * Negates the parameter.
+   * @param p - The value to negate.
+   * @returns The value.
+   */
+  NOT,
+  Noun,
+  nounType,
   /**
    * The nth function.
    * Returns the nth element of the list.
@@ -464,48 +447,65 @@ export {
    * @param list - The list to search.
    */
   nth,
-  reorder,
-  FactType,
-  get_arity,
-  get_verb,
-  get_reading,
-  get_constraints,
-  makeVerbFact,
-  FactSymbol,
-  get_verb_symbol,
-  get_nouns,
+  NULL,
+  /**
+   * The or function.
+   * Returns true if either parameter is true.
+   * @param p - The first value.
+   * @param q - The second value.
+   * @returns The value.
+   */
+  OR,
+  /**
+   * The pair function.
+   * Returns a pair of the two parameters.
+   * @param a - The first value.
+   * @param b - The second value.
+   * @returns The value.
+   */
+  pair,
+  PRED,
   Reading,
-  get_reading_verb,
-  get_reading_order,
-  get_reading_template,
-  Event,
-  get_fact,
-  get_time,
-  get_event_readings,
-  unit_state,
-  bind_state,
-  make_transition,
-  unguarded,
-  StateMachine,
-  run_machine,
-  Constraint,
-  get_modality,
-  get_predicate,
-  evaluate_constraint,
-  evaluate_with_modality,
-  Violation,
-  nounType,
-  factType,
-  role,
   reading,
-  inverseReading,
-  constraint,
-  constraintTarget,
+  reorder,
+  role,
+  run_machine,
+  /**
+   * Returns the second value of the pair.
+   * @param p - The pair.
+   * @returns The value.
+   */
+  snd,
+  StateMachine,
+  /**
+   * The successor function.
+   * Returns the successor of the parameter.
+   * @param n - The value of which to get the successor.
+   * @returns The value.
+   */
+  SUCC,
+  /**
+   * The true function.
+   * Returns the first parameter.
+   * @param trueCase - The value to return if the condition is true.
+   * @param falseCase - The value to return if the condition is false.
+   * @returns The value.
+   */
+  TRUE,
+  UINT,
+  unguarded,
+  unit,
+  unit_state,
+  Violation,
   violation,
-  ALETHIC,
-  DEONTIC,
-  CSDP,
-  type Truth,
-  type Numeral,
+  /**
+   * The zero function.
+   * Returns the identity function as a constant. (equivalent to FALSE)
+   * @param a - The function to apply to the pair.
+   * @returns The value.
+   */
+  ZERO,
   type Modality,
+  type Numeral,
+  type Truth,
 }

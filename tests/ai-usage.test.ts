@@ -1,18 +1,17 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-  AI,
-  FunctionsAI,
   Agent,
-  DB,
+  AI,
   API,
-  track,
-  // Keep internal functions for types only
-  type BaseHandlerParams,
-  type WorkflowHandler,
   // For backward compatibility during transition
   createAction,
   createSearch,
   createTrigger,
+  DB,
+  FunctionsAI,
+  // Keep internal functions for types only
+  type BaseHandlerParams,
+  type WorkflowHandler,
 } from '../src'
 
 // Mock implementation of async functions for testing
@@ -133,23 +132,23 @@ describe('Workflows.do - Business Process Orchestration', () => {
     // Run the workflow
     // Create a properly typed interface for the workflow result
     interface WorkflowResult {
-      result: { success: boolean; summary: string };
-      symbolic: { 
-        log: unknown[];
-        state: unknown;
-      };
+      result: { success: boolean; summary: string }
+      symbolic: {
+        log: unknown[]
+        state: unknown
+      }
     }
-    
+
     // Use a function type instead of an interface with only a call signature
     type WorkflowHandlerFunction = (params: {
-      ai: typeof mockAI;
-      api: typeof mockAPI;
-      db: typeof mockDB;
-      event: typeof eventData;
-    }) => Promise<WorkflowResult>;
-    
+      ai: typeof mockAI
+      api: typeof mockAPI
+      db: typeof mockDB
+      event: typeof eventData
+    }) => Promise<WorkflowResult>
+
     // First cast to unknown, then to the specific type
-    const onUserSignup = (workflow as unknown as { onUserSignup: WorkflowHandlerFunction }).onUserSignup;
+    const onUserSignup = (workflow as unknown as { onUserSignup: WorkflowHandlerFunction }).onUserSignup
     const result = await onUserSignup({
       ai: mockAI,
       api: mockAPI,
@@ -229,14 +228,14 @@ describe('Functions.do - AI Function Prototyping', () => {
 
     // Create AI functions using the public API
     const ai = FunctionsAI(aiSchema)
-    
+
     // Add proper typing for the ai functions
     type AIFunctions = typeof aiSchema & {
-      leanCanvas: (args: Record<string, unknown>) => Promise<typeof aiSchema.leanCanvas>;
-      storyBrand: (args: Record<string, unknown>) => Promise<typeof aiSchema.storyBrand>;
+      leanCanvas: (args: Record<string, unknown>) => Promise<typeof aiSchema.leanCanvas>
+      storyBrand: (args: Record<string, unknown>) => Promise<typeof aiSchema.storyBrand>
     }
-    
-    const typedAI = ai as unknown as AIFunctions;
+
+    const typedAI = ai as unknown as AIFunctions
 
     // Call the AI functions
     const leanCanvas = await typedAI.leanCanvas({
@@ -342,10 +341,10 @@ describe('APIs.do - Clickable Developer Experiences', () => {
   it('should create and invoke API endpoints', async () => {
     // Define API event interface
     interface ApiEvent {
-      id?: string;
-      data?: Record<string, unknown>;
+      id?: string
+      data?: Record<string, unknown>
     }
-    
+
     // Create API config with proper typing using the public API
     const api = API({
       name: 'test-api',
@@ -356,7 +355,7 @@ describe('APIs.do - Clickable Developer Experiences', () => {
           path: '/users/:id',
           handler: async ({ event }) => {
             // Cast event to ApiEvent to access properties
-            const typedEvent = event as ApiEvent;
+            const typedEvent = event as ApiEvent
             return { id: typedEvent.id, name: 'Test User', email: 'user@example.com' }
           },
         },
@@ -365,7 +364,7 @@ describe('APIs.do - Clickable Developer Experiences', () => {
           path: '/users',
           handler: async ({ event }) => {
             // Cast event to ApiEvent to access properties
-            const typedEvent = event as ApiEvent;
+            const typedEvent = event as ApiEvent
             return { id: 'user123', ...typedEvent.data, created: true }
           },
         },
@@ -388,28 +387,28 @@ describe('APIs.do - Clickable Developer Experiences', () => {
 
     // Type for API response
     interface ApiResponse<T> {
-      result: T;
-      symbolic: { 
-        log: unknown[];
-        state: unknown;
-      };
+      result: T
+      symbolic: {
+        log: unknown[]
+        state: unknown
+      }
     }
 
     // Invoke endpoint
-    const getUserResult = await api.endpoints.getUser.invoke({ id: '123' }) as ApiResponse<{
-      id: string;
-      name: string;
-      email: string;
-    }>;
-    
-    const createUserResult = await api.endpoints.createUser.invoke({
+    const getUserResult = (await api.endpoints.getUser.invoke({ id: '123' })) as ApiResponse<{
+      id: string
+      name: string
+      email: string
+    }>
+
+    const createUserResult = (await api.endpoints.createUser.invoke({
       data: { name: 'New User', email: 'new@example.com' },
-    }) as ApiResponse<{
-      id: string;
-      name: string;
-      email: string;
-      created: boolean;
-    }>;
+    })) as ApiResponse<{
+      id: string
+      name: string
+      email: string
+      created: boolean
+    }>
 
     // Verify results
     expect(getUserResult.result).toEqual({
@@ -475,9 +474,9 @@ describe('Database.do - AI-enriched Data', () => {
 
     // Type the result to have an id property
     interface DbResult extends Record<string, unknown> {
-      id: string;
+      id: string
     }
-    const typedResult = createResult as DbResult;
+    const typedResult = createResult as DbResult
 
     const readResult = await db.posts.read(typedResult.id)
     const updateResult = await db.posts.update(typedResult.id, { status: 'Published' })
@@ -501,13 +500,13 @@ describe('Integration Tests', () => {
     // Instead of mocking the track function directly, we'll modify the handlers to record calls
 
     // Create a record of track function calls
-    const trackCalls: { name: string, data: Record<string, unknown> }[] = [];
-    
+    const trackCalls: { name: string; data: Record<string, unknown> }[] = []
+
     // Function to add to trackCalls
     const recordTrack = (name: string, data: Record<string, unknown>) => {
-      trackCalls.push({ name, data });
-      return Promise.resolve({ name, timestamp: Date.now(), data });
-    };
+      trackCalls.push({ name, data })
+      return Promise.resolve({ name, timestamp: Date.now(), data })
+    }
 
     // Create trigger using the internal API for now
     const trigger = createTrigger({
@@ -521,14 +520,14 @@ describe('Integration Tests', () => {
           email: event.email,
           name: event.name,
           timestamp: Date.now(),
-        });
+        })
         return { processed: true, user: event }
       },
-    });
+    })
 
     // We don't need to mock trigger.fire because we want to execute the actual action
     // which will call our recordTrack function
-    
+
     // Create action using the internal API for now
     const action = createAction<{ email: string; name: string }, { sent: boolean; to: string }>({
       name: 'sendWelcomeEmail',
@@ -540,10 +539,10 @@ describe('Integration Tests', () => {
           to: params.email,
           template: 'welcome',
           timestamp: Date.now(),
-        });
+        })
         return { sent: true, to: params.email }
       },
-    });
+    })
 
     // Create search using the internal API for now
     const search = createSearch<{ id: string; email: string; name: string }>({
@@ -555,49 +554,49 @@ describe('Integration Tests', () => {
         await recordTrack('UserSearched', {
           query: query.term,
           timestamp: Date.now(),
-        });
+        })
         return [{ id: 'user1', email: 'user1@example.com', name: 'User One' }]
       },
-    });
-    
+    })
+
     // Call our handlers directly instead of via mocks
     await trigger.fire({
       email: 'john@example.com',
       name: 'John Doe',
-    });
+    })
 
     await action.execute({
       email: 'john@example.com',
       name: 'John Doe',
-    });
+    })
 
-    await search.execute({ term: 'john' });
+    await search.execute({ term: 'john' })
 
     // Verify that track was called 3 times (once for each action)
-    expect(trackCalls.length).toBe(3);
-    
+    expect(trackCalls.length).toBe(3)
+
     // Verify calls to track
     expect(trackCalls[0]).toEqual({
       name: 'UserRegistered',
       data: expect.objectContaining({
         email: 'john@example.com',
         name: 'John Doe',
-      })
-    });
-    
+      }),
+    })
+
     expect(trackCalls[1]).toEqual({
       name: 'EmailSent',
       data: expect.objectContaining({
         to: 'john@example.com',
         template: 'welcome',
-      })
-    });
-    
+      }),
+    })
+
     expect(trackCalls[2]).toEqual({
       name: 'UserSearched',
       data: expect.objectContaining({
         query: 'john',
-      })
-    });
-  });
+      }),
+    })
+  })
 })

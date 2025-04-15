@@ -4,10 +4,10 @@ import {
   Constraint,
   FactSymbol,
   FactType,
+  RMAP,
   Reading,
   TRUE,
   UINT,
-  RMAP,
   get_id,
   get_nouns,
   get_verb_symbol,
@@ -164,19 +164,19 @@ describe('RMAP JSON Serialization', () => {
 
     // Run RMAP
     const result = RMAP([fact], [uniqueConstraint])
-    
+
     // Convert to JSON
     const jsonResult = toJSON(result)
-    
+
     // Verify JSON structure
     expect(jsonResult).toBeDefined()
     expect(jsonResult.schema).toBeDefined()
     expect(jsonResult.schema.tables).toBeInstanceOf(Array)
-    
+
     // Check transformed facts
     expect(jsonResult.transformedFacts).toBeInstanceOf(Array)
     expect(jsonResult.transformedFacts.length).toBe(1)
-    
+
     const factJson = jsonResult.transformedFacts[0] as { verb: string; nouns: string[] }
     expect(factJson).toHaveProperty('verb', 'loves')
     expect(factJson).toHaveProperty('nouns')
@@ -184,7 +184,7 @@ describe('RMAP JSON Serialization', () => {
     expect(factJson.nouns).toContain('Alice')
     expect(factJson.nouns).toContain('Bob')
     expect(factJson.nouns.length).toBe(2)
-    
+
     // Verify tables include Alice and Bob
     const tables = jsonResult.schema.tables
     expect(tables.some((t) => t.name === 'Alice')).toBe(true)

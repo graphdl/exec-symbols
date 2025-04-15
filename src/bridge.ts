@@ -566,7 +566,7 @@ export const AI = (workflowDef: Record<string, WorkflowHandler>) => {
   return createWorkflowImpl(workflowDef)
 }
 
-// Functions.do - Export as module with named export to avoid name conflict  
+// Functions.do - Export as module with named export to avoid name conflict
 export const FunctionsAI = <T extends Record<string, unknown>>(schema: T): T => {
   return createAIFunctionsImpl(schema)
 }
@@ -614,13 +614,13 @@ export const API = (apiConfig: {
 
 // Remove the conflicting re-export at the end of the file
 export {
-  createWorkflowImpl as createWorkflow,
-  createAIFunctionsImpl as createAIFunctions,
+  createActionImpl as createAction,
   createAgentImpl as createAgent,
+  createAIFunctionsImpl as createAIFunctions,
   createAPIImpl as createAPI,
   createDatabaseImpl as createDatabase,
   createEventTrackerImpl as createEventTracker,
   createSearchImpl as createSearch,
-  createActionImpl as createAction,
   createTriggerImpl as createTrigger,
+  createWorkflowImpl as createWorkflow,
 }
